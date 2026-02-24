@@ -1,0 +1,99 @@
+﻿@page "/"
+@using Test.Models
+@inject HttpClient Http
+@rendermode InteractiveServer
+@inject CarService Garage
+
+<div class="swipe-container">
+    @if (cars == null)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Finding your dream ride...</p>
+        </div>
+    }
+    else if (cars.Count == 0)
+    {
+        <div class="end-of-deck">
+            <span class="bi bi-geo-alt"></span>
+            <h3>No more cars nearby</h3>
+            <button class="btn-refresh" @onclick="LoadCars">Start Over</button>
+        </div>
+    }
+    else
+    {
+        var currentCar = cars.First();
+
+        <div class="car-card">
+            <div class="car-image" style="background-image: url('@currentCar.ImageUrl');">
+                <div class="car-overlay">
+                    <div class="car-header">
+                        <h2>@currentCar.Make @currentCar.Model</h2>
+                        <span class="year-badge">@currentCar.Year</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="car-details">
+                <p>@currentCar.Description</p>
+            </div>
+
+            <div class="swipe-actions">
+                <button class="action-btn btn-no" @onclick="() => Swipe(false)" aria-label="Dislike">
+                    <span aria-hidden="true">💔</span>
+                </button>
+                <button class="action-btn btn-yes" @onclick="() => Swipe(true)" aria-label="Like">
+                    <span aria-hidden="true">❤️</span>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+
+@code {
+    private List<Car>? cars;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCars();
+    }
+
+    private async Task LoadCars()
+    {
+        // Try fetching from the API first, fall back to mocked data on error or empty response
+        try
+        {
+            var apiCars = await Http.GetFromJsonAsync<List<Car>>("api/cars");
+            if (apiCars != null && apiCars.Any())
+            {
+                cars = apiCars;
+                return;
+            }
+        }
+        catch
+        {
+            // ignore and fall back to mock data
+        }
+
+        cars = new List<Car>
+        {
+            new Car { Id = 1, Make = "Porsche", Model = "911", Year = 2023, Description = "Low mileage, weekend driver.", ImageUrl = "https://images.unsplash.com/photo-1503376780353-7e6692767b70" },
+            new Car { Id = 2, Make = "Tesla", Model = "Model S", Year = 2022, Description = "Ludicrous mode enabled.", ImageUrl = "https://images.unsplash.com/photo-1560958089-b8a1929cea89" },
+            new Car { Id = 3, Make = "Ford", Model = "Mustang", Year = 1969, Description = "Classic muscle. Sounds like thunder.", ImageUrl = "https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd" }
+        };
+    }
+
+    private void Swipe(bool isLike)
+    {
+        if (cars != null && cars.Any())
+        {
+            var currentCar = cars.First();
+            if (isLike)
+            {
+                Garage.AddMatch(currentCar); // Save to the shared service!
+            }
+            cars.RemoveAt(0);
+        }
+    }
+}
