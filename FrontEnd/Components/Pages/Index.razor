@@ -1,0 +1,105 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject CarService Garage
+
+<div class="swipe-container">
+    @if (cars == null)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Finding your dream ride...</p>
+        </div>
+    }
+    else if (cars.Count == 0)
+    {
+        <div class="end-of-deck">
+            <span class="bi bi-geo-alt"></span>
+            <h3>No more cars nearby</h3>
+            <button class="btn-refresh" @onclick="LoadCars">Start Over</button>
+        </div>
+    }
+    else
+    {
+        var currentCar = cars.First();
+        <div class="car-card">
+            <div class="car-image" style="background-image: url('@currentCar.PrimaryImagePath');">
+                <div class="car-overlay">
+                    <div class="car-header">
+                        <h2>@currentCar.Brand @currentCar.Model</h2>
+                        <span class="year-badge">@currentCar.ProductionYear</span>
+                    </div>
+                </div>
+            </div>
+            <div class="car-details">
+                <p>@currentCar.Description</p>
+                <p>📍 @currentCar.Location &nbsp;|&nbsp; 💰 €@currentCar.Price</p>
+                <p>⛽ @currentCar.FuelType &nbsp;|&nbsp; ⚙️ @currentCar.Transmission</p>
+            </div>
+            <div class="swipe-actions">
+                <button class="action-btn btn-no" @onclick="() => Swipe(false)" aria-label="Dislike">
+                    <span aria-hidden="true">💔</span>
+                </button>
+                <button class="action-btn btn-yes" @onclick="() => Swipe(true)" aria-label="Like">
+                    <span aria-hidden="true">❤️</span>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Car>? cars;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCars();
+    }
+
+    private async Task LoadCars()
+    {
+        try
+        {
+            cars = await Garage.GetAllCarsAsync();
+            if (!cars.Any())
+                cars = GetMockCars();
+        }
+        catch
+        {
+            cars = GetMockCars();
+        }
+    }
+
+    private void Swipe(bool isLike)
+    {
+        if (cars != null && cars.Any())
+        {
+            if (isLike)
+                Garage.AddMatch(cars.First());
+            cars.RemoveAt(0);
+        }
+    }
+
+    private List<Car> GetMockCars() => new()
+    {
+        new Car { Id = "1", Brand = "Porsche", Model = "911", ProductionYear = 2023,
+            Description = "Low mileage, weekend driver.",
+            PrimaryImagePath = "https://images.unsplash.com/photo-1503376780353-7e6692767b70",
+            Price = 120000, Location = "Vilnius", MileageKm = 5000,
+            FuelType = FuelCategory.Petrol, Transmission = TransmissionCategory.Automatic,
+            VIN = "WP0AA2A99PS200001", ContactInfo = "owner@email.com", Features = new() },
+
+        new Car { Id = "2", Brand = "Tesla", Model = "Model S", ProductionYear = 2022,
+            Description = "Ludicrous mode enabled.",
+            PrimaryImagePath = "https://images.unsplash.com/photo-1560958089-b8a1929cea89",
+            Price = 90000, Location = "Kaunas", MileageKm = 15000,
+            FuelType = FuelCategory.Electric, Transmission = TransmissionCategory.Automatic,
+            VIN = "5YJSA1E26MF400001", ContactInfo = "tesla@email.com", Features = new() },
+
+        new Car { Id = "3", Brand = "Ford", Model = "Mustang", ProductionYear = 1969,
+            Description = "Classic muscle. Sounds like thunder.",
+            PrimaryImagePath = "https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd",
+            Price = 45000, Location = "Klaipeda", MileageKm = 80000,
+            FuelType = FuelCategory.Petrol, Transmission = TransmissionCategory.Manual,
+            VIN = "1FABP4567KF000001", ContactInfo = "ford@email.com", Features = new() },
+    };
+}

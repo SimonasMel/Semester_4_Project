@@ -1,0 +1,45 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+
+# NuGet packages
+*.nupkg
+packages/
+*.snupkg
+
+# ASP.NET Core / Blazor specific
+wwwroot/lib/
+*.db
+*.log
+appsettings.Development.json
+appsettings.Local.json
+
+# Rider IDE files (if used)
+.idea/
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Node modules (if using npm/yarn)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Publish output
+publish/
+*.publish.xml
+
+# Others
+*.vsix
+*.cache

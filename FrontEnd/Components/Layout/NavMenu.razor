@@ -1,0 +1,59 @@
+﻿@inject CarService Garage
+@implements IDisposable
+
+<div class="nav-wrapper">
+    <!-- Left sidebar for medium+ screens -->
+    <aside class="sidebar d-none d-md-flex flex-column">
+        <div class="logo">🔥 CarSwap</div>
+        <nav class="nav flex-column">
+            <NavLink href="" Match="NavLinkMatch.All" class="nav-link">
+                <span class="bi bi-house-door"></span>
+                <span class="link-text">Explore</span>
+            </NavLink>
+            <NavLink href="matches" class="nav-link">
+                <span class="bi bi-heart"></span>
+                <span class="link-text">Matches</span>
+                @if (Garage?.MatchedCars?.Count > 0)
+                {
+                    <span class="match-badge">@Garage.MatchedCars.Count</span>
+                }
+            </NavLink>
+            <NavLink href="profile" class="nav-link">
+                <span class="bi bi-person"></span>
+                <span class="link-text">Profile</span>
+            </NavLink>
+        </nav>
+    </aside>
+
+    <!-- Bottom nav for small screens -->
+    <div class="bottom-nav d-flex d-md-none">
+        <NavLink href="" Match="NavLinkMatch.All" class="nav-item">
+            <span class="bi bi-house-door"></span>
+            <small>Explore</small>
+        </NavLink>
+        <NavLink href="matches" class="nav-item">
+            <span class="bi bi-heart"></span>
+            <small>Matches</small>
+            @if (Garage?.MatchedCars?.Count > 0)
+            {
+                <span class="match-badge">@Garage.MatchedCars.Count</span>
+            }
+        </NavLink>
+        <NavLink href="profile" class="nav-item">
+            <span class="bi bi-person-circle"></span>
+            <small>Profile</small>
+        </NavLink>
+    </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Garage.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        Garage.OnChange -= StateHasChanged;
+    }
+}
+</div>
