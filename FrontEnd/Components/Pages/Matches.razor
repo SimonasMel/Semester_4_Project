@@ -1,9 +1,8 @@
 ﻿@page "/matches"
-@using FrontEnd.Services
-@using FrontEnd.Models
 @inject CarService Garage
 
 <div class="container">
+
     <h2 class="title-gradient">My Garage</h2>
 
     @if (!Garage.MatchedCars.Any())
@@ -16,17 +15,27 @@
     else
     {
         <div class="match-list">
+
             @foreach (var car in Garage.MatchedCars)
             {
                 <div class="match-item">
+
                     <img src="@car.PrimaryImagePath" alt="Car photo" />
+
                     <div class="match-info">
                         <h4>@car.Brand @car.Model</h4>
                         <p>@car.ProductionYear</p>
+                        <span class="price">€@car.Price</span>
                     </div>
-                    <button class="btn-chat">Message Owner</button>
+
+                    <button class="btn-chat">
+                        Message Owner
+                    </button>
+
                 </div>
             }
+
         </div>
     }
+
 </div>
