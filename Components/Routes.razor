@@ -1,0 +1,15 @@
+﻿<Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(Layout.MainLayout)">
+            <div class="not-found-container">
+                <h1 class="error-code">404</h1>
+                <p>Oops! This car has already left the lot.</p>
+                <NavLink href="" class="btn-home">Back to Swiping</NavLink>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

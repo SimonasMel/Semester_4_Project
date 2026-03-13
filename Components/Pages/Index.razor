@@ -1,0 +1,121 @@
+﻿@page "/"
+@using Test.Models
+@inject HttpClient Http
+@inject CarService Garage
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="swipe-container">
+
+    @if (cars == null)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Finding your dream ride...</p>
+        </div>
+    }
+    else if (cars.Count == 0)
+    {
+        <div class="end-of-deck">
+            <span class="bi bi-geo-alt"></span>
+            <h3>No more cars nearby</h3>
+            <button class="btn-refresh" @onclick="LoadCars">Start Over</button>
+        </div>
+    }
+    else
+    {
+        var currentCar = cars.First();
+
+        <div class="car-card">
+
+            <div class="car-image" style="background-image: url('@currentCar.PrimaryImagePath');">
+                <div class="car-overlay">
+
+                    <div class="car-header">
+                        <h2>@currentCar.Brand @currentCar.Model</h2>
+                        <span class="year-badge">@currentCar.ProductionYear</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="car-details">
+
+                <p>@currentCar.Description</p>
+
+                <div class="car-specs">
+
+                    <span class="spec">
+                        <span class="bi bi-speedometer2"></span>
+                        @currentCar.EnginePowerKW kW
+                    </span>
+
+                    <span class="spec">
+                        <span class="bi bi-fuel-pump"></span>
+                        @currentCar.FuelType
+                    </span>
+
+                    <span class="spec">
+                        <span class="bi bi-gear"></span>
+                        @currentCar.Transmission
+                    </span>
+
+                </div>
+
+                <div class="price">
+                    €@currentCar.Price
+                </div>
+
+            </div>
+
+            <div class="swipe-actions">
+
+                <button class="action-btn btn-no"
+                        @onclick="() => Swipe(false)"
+                        aria-label="Dislike">
+                    💔
+                </button>
+
+                <button class="action-btn btn-yes"
+                        @onclick="() => Swipe(true)"
+                        aria-label="Like">
+                    ❤️
+                </button>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+
+    private List<Car>? cars;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCars();
+    }
+
+    private async Task LoadCars()
+    {
+        var url = $"{Nav.BaseUri}data/cars.json";
+        cars = await Http.GetFromJsonAsync<List<Car>>(url);
+    }
+
+    private void Swipe(bool isLike)
+    {
+        if (cars != null && cars.Any())
+        {
+            var currentCar = cars.First();
+
+            if (isLike)
+            {
+                Garage.AddMatch(currentCar);
+            }
+
+            cars.RemoveAt(0);
+        }
+    }
+}
