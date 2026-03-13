@@ -1,0 +1,32 @@
+﻿@page "/matches"
+@using FrontEnd.Services
+@using FrontEnd.Models
+@inject CarService Garage
+
+<div class="container">
+    <h2 class="title-gradient">My Garage</h2>
+
+    @if (!Garage.MatchedCars.Any())
+    {
+        <div class="empty-state">
+            <p>Your garage is empty. Go swipe on some cars!</p>
+            <NavLink href="/" class="btn-home">Start Swiping</NavLink>
+        </div>
+    }
+    else
+    {
+        <div class="match-list">
+            @foreach (var car in Garage.MatchedCars)
+            {
+                <div class="match-item">
+                    <img src="@car.PrimaryImagePath" alt="Car photo" />
+                    <div class="match-info">
+                        <h4>@car.Brand @car.Model</h4>
+                        <p>@car.ProductionYear</p>
+                    </div>
+                    <button class="btn-chat">Message Owner</button>
+                </div>
+            }
+        </div>
+    }
+</div>
