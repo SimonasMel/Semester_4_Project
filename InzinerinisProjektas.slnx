@@ -2,6 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
   </Folder>
+  <Project Path="BackEnd.Tests/BackEnd.Tests.csproj" Id="8134dd44-39fc-498e-9058-4541413dec04" />
   <Project Path="BackEnd/BackEnd.csproj" />
   <Project Path="FrontEnd/FrontEnd.csproj" />
   <Project Path="Shared/Shared.csproj" />
