@@ -1,0 +1,104 @@
+@page "/comparison"
+@inject CarService Garage
+
+<div class="max-w-6xl mx-auto p-6">
+
+    <h2 class="text-3xl font-bold mb-8 text-primary">Car Comparison</h2>
+
+    @if (Garage.MatchedCars.Count < 2)
+    {
+        <div class="text-center p-20 text-text-muted dark:text-gray-400 bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft">
+            Select at least two cars to compare.
+        </div>
+    }
+    else
+    {
+        var car1 = Garage.MatchedCars[0];
+        var car2 = Garage.MatchedCars[1];
+
+        <div class="flex justify-center gap-16 mt-8 md:flex-col md:items-center">
+
+            <div class="text-center flex flex-col gap-4">
+                <img src="@car1.PrimaryImagePath" class="w-[300px] h-[200px] object-cover rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800" />
+                <h3 class="text-xl font-bold text-text-dark dark:text-text-light">@car1.Brand @car1.Model</h3>
+            </div>
+
+            <div class="text-center flex flex-col gap-4">
+                <img src="@car2.PrimaryImagePath" class="w-[300px] h-[200px] object-cover rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800" />
+                <h3 class="text-xl font-bold text-text-dark dark:text-text-light">@car2.Brand @car2.Model</h3>
+            </div>
+
+        </div>
+
+        <div class="overflow-x-auto mt-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft">
+            <table class="w-full border-collapse bg-white dark:bg-surface-dark">
+
+                <thead>
+                    <tr>
+                        <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">Specification</th>
+                        <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">@car1.Brand @car1.Model</th>
+                        <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">@car2.Brand @car2.Model</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Year</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.ProductionYear</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.ProductionYear</td>
+                    </tr>
+
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Fuel</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.FuelType</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.FuelType</td>
+                    </tr>
+
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Transmission</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.Transmission</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.Transmission</td>
+                    </tr>
+
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Body</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.BodyType</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.BodyType</td>
+                    </tr>
+
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Power (kW)</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.EnginePowerKW</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.EnginePowerKW</td>
+                    </tr>
+
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Fuel Consumption</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.FuelConsumptionLitersPer100Km</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.FuelConsumptionLitersPer100Km</td>
+                    </tr>
+
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Price</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">€@car1.Price</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">€@car2.Price</td>
+                    </tr>
+
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Mileage</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.MileageKm km</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.MileageKm km</td>
+                    </tr>
+
+                    <tr>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Location</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.Location</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.Location</td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </div>
+    }
+
+</div>

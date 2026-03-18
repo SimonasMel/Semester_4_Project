@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="BackEnd/BackEnd.csproj" />
+  <Project Path="FrontEnd/FrontEnd.csproj" />
+  <Project Path="Shared/Shared.csproj" />
+</Solution>

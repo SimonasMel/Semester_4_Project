@@ -1,0 +1,153 @@
+@page "/"
+@using Shared.Models
+@inject HttpClient Http
+@inject CarService Garage
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="w-full max-w-[720px] flex justify-center">
+
+    @if (cars == null)
+    {
+        <div class="flex flex-col items-center justify-center p-12 text-center">
+            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-gray-400">Finding your dream ride...</p>
+        </div>
+    }
+    else if (cars.Count == 0)
+    {
+        <div class="flex flex-col items-center justify-center p-12 text-center gap-4">
+            <span class="bi bi-geo-alt text-4xl text-gray-500"></span>
+            <h3 class="text-xl font-bold">No more cars nearby</h3>
+            <button class="px-6 py-2 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-colors" @onclick="LoadCars">Start Over</button>
+        </div>
+    }
+    else
+    {
+        var currentCar = cars.First();
+
+        <div class="w-full max-w-[520px] min-h-[720px] bg-white dark:bg-surface-dark rounded-[26px] shadow-light-soft dark:shadow-soft overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800 transition-all duration-300 ease-out @(swipeDirection == SwipeDirection.Right ? "translate-x-[220px] rotate-[14deg] opacity-0" : swipeDirection == SwipeDirection.Left ? "-translate-x-[220px] -rotate-[14deg] opacity-0" : string.Empty)">
+
+            <div class="h-[420px] bg-cover bg-center relative" style="background-image: url('@currentCar.PrimaryImagePath');">
+                <div class="absolute bottom-0 left-0 right-0 p-5 text-white bg-gradient-to-t from-black/85 to-transparent">
+
+                    <div class="flex flex-col gap-1">
+                        <h2 class="text-2xl font-bold m-0">@currentCar.Brand @currentCar.Model</h2>
+                        <span class="inline-block self-start px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary text-xs font-bold">@currentCar.ProductionYear</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="p-[20px_22px_0] text-[0.98rem] flex-1 flex flex-col">
+
+                <p class="text-text-muted dark:text-text-light leading-relaxed">@currentCar.Description</p>
+
+                <div class="flex flex-wrap gap-4 mt-4 text-slate-500 dark:text-slate-400">
+
+                    <span class="flex items-center gap-1.5 text-sm font-medium">
+                        <span class="bi bi-speedometer2 text-primary"></span>
+                        @currentCar.EnginePowerKW kW
+                    </span>
+
+                    <span class="flex items-center gap-1.5 text-sm font-medium">
+                        <span class="bi bi-fuel-pump text-primary"></span>
+                        @currentCar.FuelType
+                    </span>
+
+                    <span class="flex items-center gap-1.5 text-sm font-medium">
+                        <span class="bi bi-gear text-primary"></span>
+                        @currentCar.Transmission
+                    </span>
+
+                </div>
+
+                <div class="text-2xl font-bold mt-auto pt-4 text-primary">
+                    €@currentCar.Price
+                </div>
+
+                <div class="mt-4">
+                    <a href="@GetDetailsUrl(currentCar)" class="w-full inline-flex justify-center items-center p-[10px_14px] rounded-full border border-slate-200 text-slate-600 no-underline text-sm font-bold bg-gray-50 cursor-pointer transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary dark:bg-slate-800/40 dark:border-slate-700 dark:text-text-light dark:hover:bg-primary/10 dark:hover:border-primary">
+                        View Details
+                    </a>
+                </div>
+
+            </div>
+
+            <div class="flex justify-center gap-8 p-[22px_20px_26px] mt-auto">
+
+                <button class="w-[70px] h-[70px] rounded-full border-2 text-2xl cursor-pointer inline-flex items-center justify-center transition-all duration-200 font-semibold hover:scale-110 bg-white dark:bg-slate-900 border-red-500 text-red-500 shadow-sm hover:bg-red-50"
+                        @onclick="() => StartSwipe(false)"
+                        aria-label="Dislike">
+                    ✕
+                </button>
+
+                <button class="w-[70px] h-[70px] rounded-full border-2 text-2xl cursor-pointer inline-flex items-center justify-center transition-all duration-200 font-semibold hover:scale-110 bg-white dark:bg-slate-900 border-primary text-red-500 shadow-sm hover:bg-green-50 dark:hover:bg-primary/10"
+                        @onclick="() => StartSwipe(true)"
+                        aria-label="Like">
+                    ❤
+                </button>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    private enum SwipeDirection
+    {
+        None,
+        Left,
+        Right
+    }
+
+    private List<Car>? cars;
+    private SwipeDirection swipeDirection = SwipeDirection.None;
+    private bool pendingLike;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCars();
+    }
+
+    private async Task LoadCars()
+    {
+        var url = $"{Nav.BaseUri}data/cars.json";
+        cars = await Http.GetFromJsonAsync<List<Car>>(url);
+    }
+
+    private async Task StartSwipe(bool isLike)
+    {
+        if (swipeDirection != SwipeDirection.None || cars is null || !cars.Any())
+        {
+            return;
+        }
+
+        pendingLike = isLike;
+        swipeDirection = isLike ? SwipeDirection.Right : SwipeDirection.Left;
+        await Task.Delay(280);
+
+        if (cars is null || !cars.Any())
+        {
+            swipeDirection = SwipeDirection.None;
+            pendingLike = false;
+            return;
+        }
+
+        var currentCar = cars.First();
+
+        if (pendingLike)
+        {
+            Garage.AddMatch(currentCar);
+        }
+
+        cars.RemoveAt(0);
+        swipeDirection = SwipeDirection.None;
+        pendingLike = false;
+    }
+
+    private static string GetDetailsUrl(Car car) =>
+        $"/cars/{Uri.EscapeDataString(car.Brand)}/{Uri.EscapeDataString(car.Model)}/{car.ProductionYear}";
+}

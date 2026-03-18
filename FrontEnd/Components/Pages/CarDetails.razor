@@ -1,0 +1,168 @@
+@page "/cars/{Brand}/{Model}/{ProductionYear:int}"
+@using Shared.Models
+@inject HttpClient Http
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Car Details</PageTitle>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    @if (isLoading)
+    {
+        <div class="text-center py-20">
+            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-400">Loading car details...</p>
+        </div>
+    }
+    else if (car is null)
+    {
+        <div class="bg-white dark:bg-surface-dark rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div class="p-8 text-center">
+                <h1 class="text-2xl font-bold mb-4 text-text-dark dark:text-text-light">Car not found</h1>
+                <p class="text-text-muted dark:text-gray-400 mb-6">The selected car could not be loaded.</p>
+                <a href="/" class="inline-block px-6 py-2 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-colors no-underline">Back to Explore</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="mb-6">
+            <a href="/" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 dark:border-slate-700 text-text-dark dark:text-text-light hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors no-underline font-medium text-sm">
+                <span class="bi bi-arrow-left"></span> Back to Explore
+            </a>
+        </div>
+
+        <div class="bg-white dark:bg-surface-dark rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <img src="@car.PrimaryImagePath"
+                 alt="@($"{car.Brand} {car.Model}")"
+                 class="w-full h-[420px] object-cover" />
+
+            <div class="p-8">
+                <div class="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-8">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-1 text-text-dark dark:text-text-light">@car.Brand @car.Model</h1>
+                        <p class="text-text-muted dark:text-gray-400 m-0 font-medium">@car.ProductionYear • @car.BodyType • @car.Location</p>
+                    </div>
+
+                    <div class="md:text-right">
+                        <div class="text-3xl font-bold text-primary">€@car.Price</div>
+                        <div class="text-text-muted dark:text-gray-400 font-medium">@car.MileageKm km</div>
+                    </div>
+                </div>
+
+                <p class="text-text-muted dark:text-text-light mb-10 leading-relaxed text-lg">@car.Description</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                        <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Fuel Type</div>
+                        <div class="text-text-dark dark:text-text-light font-semibold">@car.FuelType</div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                        <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Transmission</div>
+                        <div class="text-text-dark dark:text-text-light font-semibold">@car.Transmission</div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                        <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Engine Power</div>
+                        <div class="text-text-dark dark:text-text-light font-semibold">@car.EnginePowerKW kW</div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                        <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Consumption</div>
+                        <div class="text-text-dark dark:text-text-light font-semibold">@GetConsumption(car)</div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                        <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">VIN</div>
+                        <div class="text-text-dark dark:text-text-light font-semibold">@car.VIN</div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                        <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Contact</div>
+                        <div class="text-text-dark dark:text-text-light font-semibold">@car.ContactInfo</div>
+                    </div>
+                </div>
+
+                @if (car.Features.Any())
+                {
+                    <div class="mb-10">
+                        <h2 class="text-xl font-bold mb-5 text-text-dark dark:text-text-light">Features</h2>
+                        <div class="flex flex-wrap gap-3">
+                            @foreach (var feature in car.Features)
+                            {
+                                <span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-text-light px-5 py-2 rounded-full text-sm font-bold border border-slate-200 dark:border-slate-700">@feature</span>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (car.AdditionalImagePaths.Any())
+                {
+                    <div class="mb-10">
+                        <h2 class="text-xl font-bold mb-5 text-text-dark dark:text-text-light">More Photos</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            @foreach (var image in car.AdditionalImagePaths)
+                            {
+                                <img src="@image"
+                                     alt="@($"{car.Brand} {car.Model} photo")"
+                                     class="w-full h-[220px] object-cover rounded-xl shadow-sm border border-slate-200 dark:border-slate-800" />
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="flex gap-4 mt-8">
+                    <button class="flex-1 px-8 py-4 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-all duration-200 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]">
+                        Contact Seller
+                    </button>
+                    <button class="px-8 py-4 rounded-full border-2 border-primary text-primary hover:bg-primary/5 transition-all duration-200 font-bold active:scale-[0.98]">
+                        Save to Favorites
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Brand { get; set; } = string.Empty;
+    [Parameter] public string Model { get; set; } = string.Empty;
+    [Parameter] public int ProductionYear { get; set; }
+
+    private Car? car;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        var url = $"{Nav.BaseUri}data/cars.json";
+        var cars = await Http.GetFromJsonAsync<List<Car>>(url) ?? [];
+
+        var decodedBrand = Uri.UnescapeDataString(Brand);
+        var decodedModel = Uri.UnescapeDataString(Model);
+
+        car = cars.FirstOrDefault(c =>
+            string.Equals(c.Brand, decodedBrand, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(c.Model, decodedModel, StringComparison.OrdinalIgnoreCase) &&
+            c.ProductionYear == ProductionYear);
+
+        isLoading = false;
+    }
+
+    private static string GetConsumption(Car car)
+    {
+        if (car.EnergyConsumptionKWhPer100Km.HasValue)
+        {
+            return $"{car.EnergyConsumptionKWhPer100Km.Value:0.#} kWh/100 km";
+        }
+
+        if (car.FuelConsumptionLitersPer100Km.HasValue)
+        {
+            return $"{car.FuelConsumptionLitersPer100Km.Value:0.#} L/100 km";
+        }
+
+        return "N/A";
+    }
+}

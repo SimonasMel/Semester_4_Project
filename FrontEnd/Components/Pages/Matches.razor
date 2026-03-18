@@ -1,0 +1,55 @@
+@page "/matches"
+@inject CarService Garage
+
+<div class="max-w-4xl mx-auto p-6">
+
+    <h2 class="text-3xl font-bold mb-8 text-primary">My Garage</h2>
+
+    @if (!Garage.MatchedCars.Any())
+    {
+        <div class="flex flex-col items-center justify-center p-20 text-center gap-6 bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft">
+            <div class="w-16 h-16 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2">
+                <span class="bi bi-heart text-3xl text-gray-300 dark:text-gray-600"></span>
+            </div>
+            <p class="text-text-muted dark:text-gray-400 font-medium">Your garage is empty. Go swipe on some cars!</p>
+            <NavLink href="/" class="px-8 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-all duration-200 no-underline shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]">Start Swiping</NavLink>
+        </div>
+    }
+    else
+    {
+        <div class="flex flex-col gap-5 w-full max-w-[700px]">
+
+            @foreach (var car in Garage.MatchedCars)
+            {
+                <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30">
+
+                    <img src="@car.PrimaryImagePath" alt="Car photo" class="w-20 h-20 object-cover rounded-lg mr-5 shadow-sm" />
+
+                    <div class="flex-grow">
+                        <h4 class="text-lg font-bold m-0 text-text-dark dark:text-text-light">@car.Brand @car.Model</h4>
+                        <p class="text-sm text-text-muted dark:text-gray-400 m-0 font-medium">@car.ProductionYear</p>
+                        <span class="text-primary font-bold text-lg">€@car.Price</span>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <a href="@GetDetailsUrl(car)" class="px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 text-text-dark dark:text-text-light hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 no-underline text-sm font-bold">
+                            Details
+                        </a>
+
+                        <button class="bg-primary-blue text-white border-none py-2 px-5 rounded-full cursor-pointer transition-all duration-200 hover:bg-blue-600 shadow-sm hover:shadow-md text-sm font-bold active:scale-[0.98]">
+                            Message
+                        </button>
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@code {
+    private static string GetDetailsUrl(Shared.Models.Car car) =>
+        $"/cars/{Uri.EscapeDataString(car.Brand)}/{Uri.EscapeDataString(car.Model)}/{car.ProductionYear}";
+}

@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    outline: none !important;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Set root background to avoid white lines or flashes */
+  html {
+    background-color: #f9fafb; /* bg-bg-light */
+  }
+
+  html.dark {
+    background-color: #020617; /* bg-bg-dark */
+  }
+}

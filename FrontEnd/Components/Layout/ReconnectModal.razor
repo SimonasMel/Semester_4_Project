@@ -1,0 +1,30 @@
+<script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
+
+<dialog id="components-reconnect-modal" class="fixed inset-0 z-[1000] bg-white dark:bg-slate-900 w-80 m-auto p-8 border-0 rounded-lg shadow-2xl opacity-0 transition-opacity duration-500 open:opacity-100 open:animate-in open:fade-in open:slide-in-from-bottom-8" data-nosnippet>
+    <div class="flex flex-col items-center gap-4">
+        <div class="components-rejoining-animation hidden" aria-hidden="true">
+            <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p class="components-reconnect-first-attempt-visible hidden text-center m-0 text-slate-900 dark:text-white font-medium">
+            Rejoining the server...
+        </p>
+        <p class="components-reconnect-repeated-attempt-visible hidden text-center m-0 text-slate-900 dark:text-white font-medium">
+            Rejoin failed... trying again in <span id="components-seconds-to-next-attempt" class="font-bold text-primary"></span> seconds.
+        </p>
+        <p class="components-reconnect-failed-visible hidden text-center m-0 text-red-500 font-bold">
+            Failed to rejoin.<br />Please retry or reload the page.
+        </p>
+        <button id="components-reconnect-button" class="components-reconnect-failed-visible hidden px-6 py-2 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-colors">
+            Retry
+        </button>
+        <p class="components-pause-visible hidden text-center m-0 text-slate-600 dark:text-gray-400">
+            The session has been paused by the server.
+        </p>
+        <p class="components-resume-failed-visible hidden text-center m-0 text-red-500 font-bold">
+            Failed to resume the session.<br />Please retry or reload the page.
+        </p>
+        <button id="components-resume-button" class="components-pause-visible components-resume-failed-visible hidden px-6 py-2 bg-primary-blue text-white rounded-full font-bold hover:bg-blue-600 transition-colors">
+            Resume
+        </button>
+    </div>
+</dialog>
