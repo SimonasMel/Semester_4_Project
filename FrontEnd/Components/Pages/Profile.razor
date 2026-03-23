@@ -1,44 +1,143 @@
 @page "/profile"
+@inject CarService Garage
+@inject NavigationManager Nav
 
 <div class="max-w-4xl mx-auto p-6">
 
     <h2 class="text-3xl font-bold mb-8 text-primary">Profile Settings</h2>
 
-    <div class="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 flex gap-10 md:flex-col">
-
-        <div class="flex-shrink-0 w-1/3 md:w-full">
-            <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70" class="w-full h-auto rounded-xl object-cover shadow-lg border border-slate-100 dark:border-slate-800" />
-        </div>
-
-        <div class="flex-grow flex flex-col gap-6">
-            <h3 class="text-xl font-bold text-text-dark dark:text-text-light">Your Car</h3>
-
+    <div class="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 mb-8">
+        <h3 class="text-xl font-bold mb-6 text-text-dark dark:text-text-light">Add a Car</h3>
+        
+        <form @onsubmit="AddCar" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Brand</label>
-                <input class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="BMW" />
+                <input @bind="NewCar.Brand" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="BMW" required />
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Model</label>
-                <input class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="M3" />
+                <input @bind="NewCar.Model" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="M3" required />
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Year</label>
-                <input class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="2020" />
+                <input @bind="NewCar.ProductionYear" type="number" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="2020" required />
             </div>
 
             <div class="flex flex-col gap-2">
-                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Mileage</label>
-                <input class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="45000 km" />
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Price (€)</label>
+                <input @bind="NewCar.Price" type="number" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="50000" required />
             </div>
 
-            <button class="mt-4 px-8 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-all duration-200 shadow-lg shadow-primary/20 active:scale-[0.98]">
-                Save Changes
-            </button>
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Mileage (km)</label>
+                <input @bind="NewCar.MileageKm" type="number" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="45000" required />
+            </div>
 
-        </div>
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Fuel Type</label>
+                <select @bind="NewCar.FuelType" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium">
+                    <option value="0">Petrol</option>
+                    <option value="1">Diesel</option>
+                    <option value="2">Electric</option>
+                    <option value="3">Hybrid</option>
+                </select>
+            </div>
 
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Transmission</label>
+                <select @bind="NewCar.Transmission" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium">
+                    <option value="0">Manual</option>
+                    <option value="1">Automatic</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Body Type</label>
+                <select @bind="NewCar.BodyType" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium">
+                    <option value="0">Sedan</option>
+                    <option value="1">SUV</option>
+                    <option value="2">Hatchback</option>
+                    <option value="3">Coupe</option>
+                    <option value="4">Convertible</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Power (kW)</label>
+                <input @bind="NewCar.EnginePowerKW" type="number" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="200" required />
+            </div>
+
+            <div class="flex flex-col gap-2 md:col-span-2">
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Image URL</label>
+                <input @bind="NewCar.PrimaryImagePath" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="https://example.com/image.jpg" required />
+            </div>
+
+            <div class="flex flex-col gap-2 md:col-span-2">
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Description</label>
+                <textarea @bind="NewCar.Description" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" rows="3" placeholder="Describe the car..." required></textarea>
+            </div>
+
+            <div class="md:col-span-2">
+                <button type="submit" class="px-8 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-all duration-200 shadow-lg shadow-primary/20 active:scale-[0.98]">
+                    Add Car
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800">
+        <h3 class="text-xl font-bold mb-6 text-text-dark dark:text-text-light">My Added Cars</h3>
+        
+        @if (!AddedCars.Any())
+        {
+            <p class="text-text-muted dark:text-gray-400">You haven't added any cars yet. Use the form above to add your first car!</p>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach (var car in AddedCars)
+                {
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <img src="@car.PrimaryImagePath" alt="@car.Brand @car.Model" class="w-full h-32 object-cover rounded-lg mb-3" />
+                        <h4 class="font-bold text-text-dark dark:text-text-light">@car.Brand @car.Model</h4>
+                        <p class="text-sm text-text-muted dark:text-gray-400">@car.ProductionYear • €@car.Price</p>
+                    </div>
+                }
+            </div>
+        }
     </div>
 
 </div>
+
+@code {
+    private List<Shared.Models.Car> AddedCars { get; set; } = new();
+    private Shared.Models.Car NewCar { get; set; } = new();
+
+    private async Task AddCar()
+    {
+        // Set default values for required fields
+        NewCar.FuelConsumptionLitersPer100Km = 8.5; // Default
+        NewCar.Location = "Unknown";
+        NewCar.ContactInfo = "user@example.com";
+        NewCar.VIN = Guid.NewGuid().ToString();
+        NewCar.Features = new List<string>();
+
+        // Try to add via API
+        var success = await Garage.CreateCarAsync(NewCar);
+        if (success)
+        {
+            AddedCars.Add(NewCar);
+            NewCar = new Shared.Models.Car(); // Reset form
+            StateHasChanged();
+        }
+        else
+        {
+            // Fallback: just add to local list
+            AddedCars.Add(NewCar);
+            NewCar = new Shared.Models.Car();
+            StateHasChanged();
+        }
+    }
+}
