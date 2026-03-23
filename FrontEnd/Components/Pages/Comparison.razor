@@ -13,11 +13,31 @@
     }
     else
     {
-        var car1 = Garage.MatchedCars[0];
-        var car2 = Garage.MatchedCars[1];
+        <div class="flex justify-center gap-8 mb-8">
+            <div>
+                <label for="car1-select" class="block text-sm font-medium text-text-dark dark:text-text-light mb-2">Select Car 1</label>
+                <select id="car1-select" @bind="SelectedCar1Index" class="border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 bg-white dark:bg-surface-dark text-text-dark dark:text-text-light">
+                    @for (int i = 0; i < Garage.MatchedCars.Count; i++)
+                    {
+                        <option value="@i">@Garage.MatchedCars[i].Brand @Garage.MatchedCars[i].Model</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="car2-select" class="block text-sm font-medium text-text-dark dark:text-text-light mb-2">Select Car 2</label>
+                <select id="car2-select" @bind="SelectedCar2Index" class="border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 bg-white dark:bg-surface-dark text-text-dark dark:text-text-light">
+                    @for (int i = 0; i < Garage.MatchedCars.Count; i++)
+                    {
+                        <option value="@i">@Garage.MatchedCars[i].Brand @Garage.MatchedCars[i].Model</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        var car1 = Garage.MatchedCars[SelectedCar1Index];
+        var car2 = Garage.MatchedCars[SelectedCar2Index];
 
         <div class="flex flex-wrap justify-center gap-16 mt-8">
-            // komentaras
             <div class="text-center flex flex-col gap-4">
                 <img src="@car1.PrimaryImagePath" class="w-[300px] h-[200px] object-cover rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800" />
                 <h3 class="text-xl font-bold text-text-dark dark:text-text-light">@car1.Brand @car1.Model</h3>
@@ -102,3 +122,8 @@
     }
 
 </div>
+
+@code {
+    private int SelectedCar1Index { get; set; } = 0;
+    private int SelectedCar2Index { get; set; } = 1;
+}
