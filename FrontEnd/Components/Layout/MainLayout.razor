@@ -1,5 +1,9 @@
 @inherits LayoutComponentBase
+@using Shared.Models
 @inject FrontEnd.Services.ThemeService Theme
+@inject CarService Garage
+@inject HttpClient Http
+@inject NavigationManager Nav
 @implements IDisposable
 
 <div class="@(Theme.IsDark ? "dark" : "") min-h-screen w-full m-0 p-0 border-none">
@@ -13,15 +17,15 @@
                     <span class="bi bi-search text-gray-400 dark:text-gray-500"></span>
                     <input class="border-none outline-none bg-transparent w-[180px] text-sm placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="Search cars..." />
                 </div>
-                <button class="w-10 h-10 rounded-full border border-slate-300 bg-white flex items-center justify-center shadow-sm transition-all duration-200 hover:bg-gray-50 dark:bg-surface-dark dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Change layout">
-                    <span class="bi bi-layout-sidebar-inset text-gray-500 dark:text-gray-400"></span>
+                <button class="w-10 h-10 rounded-full border border-slate-300 bg-white flex items-center justify-center shadow-sm transition-all duration-200 hover:bg-gray-50 dark:bg-surface-dark dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Settings" @onclick="GoToSettings">
+                    <span class="bi bi-gear text-gray-500 dark:text-gray-400"></span>
                 </button>
             </div>
 
             <header class="relative flex flex-col items-center px-12 pt-12 pb-6 gap-4 md:px-6">
                 <div class="flex flex-col items-center text-center">
                     <h1 class="text-2xl font-bold m-0 text-text-dark dark:text-text-light">Discover Your Next Ride</h1>
-                    <p class="mt-1 mb-0 text-sm text-text-muted dark:text-gray-400 font-medium">5 cars waiting for you</p>
+                    <p class="mt-1 mb-0 text-sm text-text-muted dark:text-gray-400 font-medium">@CarCount cars waiting for you</p>
                 </div>  
             </header>
 
@@ -37,6 +41,37 @@
 </div>
 
 @code {
+    private int CarCount { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var cars = await Garage.GetAllCarsAsync();
+            CarCount = cars?.Count ?? 0;
+            return;
+        }
+        catch
+        {
+            // API backend may be unavailable when the front-end is loaded in isolation
+        }
+
+        try
+        {
+            var localCars = await Http.GetFromJsonAsync<List<Car>>($"{Nav.BaseUri}data/cars.json");
+            CarCount = localCars?.Count ?? 0;
+        }
+        catch
+        {
+            CarCount = 0;
+        }
+    }
+
+    private void GoToSettings()
+    {
+        Nav.NavigateTo("/setting");
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
