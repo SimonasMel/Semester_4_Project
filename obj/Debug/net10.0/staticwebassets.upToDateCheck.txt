@@ -1,0 +1,13 @@
+C:\Users\domas\.nuget\packages\microsoft.aspnetcore.app.internal.assets\10.0.5\build\..\_framework\blazor.server.js
+C:\Users\domas\.nuget\packages\microsoft.aspnetcore.app.internal.assets\10.0.5\build\..\_framework\blazor.web.js
+Components\Layout\ReconnectModal.razor.js
+C:\Users\domas\source\repos\Semester_4_Project-main\FrontEnd\wwwroot\data\cars.json
+C:\Users\domas\source\repos\Semester_4_Project-main\FrontEnd\wwwroot\tailwind.css
+C:\Users\domas\source\repos\Semester_4_Project-main\FrontEnd\wwwroot\themeManager.js
+C:\Users\domas\source\repos\Semester_4_Project-main\FrontEnd\Components\Layout\ReconnectModal.razor.js
+C:\Users\domas\.nuget\packages\microsoft.aspnetcore.app.internal.assets\10.0.5\_framework\blazor.server.js
+C:\Users\domas\.nuget\packages\microsoft.aspnetcore.app.internal.assets\10.0.5\_framework\blazor.web.js
+wwwroot\data\cars.json
+wwwroot\favicon.png
+wwwroot\tailwind.css
+wwwroot\themeManager.js
