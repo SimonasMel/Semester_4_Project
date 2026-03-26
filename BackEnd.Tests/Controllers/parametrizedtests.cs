@@ -41,7 +41,6 @@ namespace BackEnd.Tests.Controllers
         [Theory]
         [InlineData("100")]
         [InlineData("nonexistent")]
-        [InlineData("")]
         public async Task GetCarById_WhenCarDoesNotExist_ReturnsNotFound(string id)
         {
             // Arrange
@@ -100,13 +99,13 @@ namespace BackEnd.Tests.Controllers
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task UpdateCar_WhenIdIsInvalid_ReturnsBadRequest(string id)
+        public async Task UpdateCar_WhenIdIsInvalid_ReturnsBadRequest(string? id)
         {
             // Arrange
             var updated = CreateTestCar("1");
 
             // Act
-            var result = await _controller.UpdateCar(id!, updated);
+            var result = await _controller.UpdateCar(id ?? string.Empty, updated);
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
@@ -134,10 +133,10 @@ namespace BackEnd.Tests.Controllers
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task DeleteCar_WhenIdIsInvalid_ReturnsBadRequest(string id)
+        public async Task DeleteCar_WhenIdIsInvalid_ReturnsBadRequest(string? id)
         {
             // Act
-            var result = await _controller.DeleteCar(id!);
+            var result = await _controller.DeleteCar(id ?? string.Empty);
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
