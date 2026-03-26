@@ -126,12 +126,12 @@ namespace BackEnd.Controllers
                 if (newCar == null)
                     return BadRequest(new { error = "Car data is required" });
 
-                if (!ModelState.IsValid)
+                /*if (!ModelState.IsValid)
                 {
                     var errors = ModelState.Values.SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage).ToList();
                     return BadRequest(new { error = "Validation failed", details = errors });
-                }
+                }*/
 
                 await _repository.AddAsync(newCar);
 
@@ -184,12 +184,12 @@ namespace BackEnd.Controllers
                 if (!await _repository.ExistsAsync(id))
                     return NotFound(new { error = $"Car with ID {id} not found" });
 
-                if (!ModelState.IsValid)
+                /*if (!ModelState.IsValid)
                 {
                     var errors = ModelState.Values.SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage).ToList();
                     return BadRequest(new { error = "Validation failed", details = errors });
-                }
+                }*/
 
                 updatedCar.Id = id;
                 await _repository.UpdateAsync(updatedCar);

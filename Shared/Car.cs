@@ -75,7 +75,7 @@ namespace Shared.Models
 
         [Display(Name = "Description")]
         [StringLength(1000, MinimumLength = 10, ErrorMessage = "Description must be between 10 and 1000 characters")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } //= string.Empty;
 
         [Display(Name = "Features")]
         public List<string> Features { get; set; } = new List<string>();
