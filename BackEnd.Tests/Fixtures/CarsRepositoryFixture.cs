@@ -1,4 +1,6 @@
 ﻿using BackEnd.Repositories;
+using BackEnd.Data;
+using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using Xunit;
 
@@ -11,6 +13,7 @@ namespace BackEnd.Tests.Fixtures
     public class CarRepositoryFixture : IAsyncLifetime
     {
         public CarRepository Repository { get; private set; } = null!;
+        public CarDbContext Context { get; private set; } = null!;
         public List<Car> TestCars { get; private set; } = new();
 
         /// <summary>
@@ -18,8 +21,13 @@ namespace BackEnd.Tests.Fixtures
         /// </summary>
         public async Task InitializeAsync()
         {
-            // Create fresh repository instance for each test
-            Repository = new CarRepository();
+            // Create an in-memory database for testing
+            var options = new DbContextOptionsBuilder<CarDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            Context = new CarDbContext(options);
+            Repository = new CarRepository(Context);
 
             // Pre-populate with test data
             TestCars = new List<Car>
@@ -51,6 +59,7 @@ namespace BackEnd.Tests.Fixtures
             }
 
             TestCars.Clear();
+            await Context.DisposeAsync();
         }
 
         public Car CreateTestCar(string id, string brand = "Tesla", string model = "Model 3")

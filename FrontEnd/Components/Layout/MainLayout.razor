@@ -25,7 +25,7 @@
             <header class="relative flex flex-col items-center px-12 pt-12 pb-6 gap-4 md:px-6">
                 <div class="flex flex-col items-center text-center">
                     <h1 class="text-2xl font-bold m-0 text-text-dark dark:text-text-light">Discover Your Next Ride</h1>
-                    <p class="mt-1 mb-0 text-sm text-text-muted dark:text-gray-400 font-medium">@CarCount cars waiting for you</p>
+                    <p class="mt-1 mb-0 text-sm text-text-muted dark:text-gray-400 font-medium">@Garage.RemainingCars cars left</p>
                 </div>  
             </header>
 
@@ -41,29 +41,23 @@
 </div>
 
 @code {
-    private int CarCount { get; set; } = 0;
-
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var cars = await Garage.GetAllCarsAsync();
-            CarCount = cars?.Count ?? 0;
-            return;
-        }
-        catch
-        {
-            // API backend may be unavailable when the front-end is loaded in isolation
-        }
+            // Load demo cars and set the remaining count
+            var allCars = await Garage.GetAllCarsAsync();
+            var demoCars = allCars?.Where(c => c.IsDemo).ToList() ?? new List<Shared.Models.Car>();
+            Garage.UpdateRemainingCars(demoCars.Count);
 
-        try
-        {
-            var localCars = await Http.GetFromJsonAsync<List<Car>>($"{Nav.BaseUri}data/cars.json");
-            CarCount = localCars?.Count ?? 0;
+            // Subscribe to CarService changes to update the UI
+            Garage.OnChange += StateHasChanged;
+            Console.WriteLine($"✓ Loaded {demoCars.Count} demo cars for explore page");
         }
-        catch
+        catch (Exception ex)
         {
-            CarCount = 0;
+            Console.WriteLine($"✗ Error loading cars: {ex.Message}");
+            Garage.UpdateRemainingCars(0);
         }
     }
 
@@ -85,5 +79,6 @@
     public void Dispose()
     {
         Theme.OnChange -= StateHasChanged;
+        Garage.OnChange -= StateHasChanged;
     }
 }

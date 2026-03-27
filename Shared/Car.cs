@@ -86,13 +86,15 @@ namespace Shared.Models
         public string Location { get; set; } = string.Empty;
 
         [Display(Name = "Contact information")]
-        [Required(ErrorMessage = "Contact information is required")]
         [StringLength(100, ErrorMessage = "Contact information must not exceed 100 characters")]
-        public string ContactInfo { get; set; } = string.Empty;
+        public string? ContactInfo { get; set; }
 
         [Display(Name = "VIN")]
         [StringLength(17, MinimumLength = 17, ErrorMessage = "VIN must be exactly 17 characters")]
-        public string VIN { get; set; } = string.Empty;
+        public string? VIN { get; set; }
+
+        [Display(Name = "Is Demo Car")]
+        public bool IsDemo { get; set; } = false;
 
         public Car()
         {

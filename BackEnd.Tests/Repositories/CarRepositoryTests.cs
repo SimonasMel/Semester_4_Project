@@ -1,16 +1,24 @@
 ﻿using Xunit;
 using Shared.Models;
 using BackEnd.Repositories;
+using BackEnd.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.Tests.Repositories
 {
     public class CarRepositoryTests
     {
         private readonly CarRepository _repository;
+        private readonly CarDbContext _context;
 
         public CarRepositoryTests()
         {
-            _repository = new CarRepository();
+            var options = new DbContextOptionsBuilder<CarDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            _context = new CarDbContext(options);
+            _repository = new CarRepository(_context);
         }
 
         private Car CreateTestCar(string id = "1")

@@ -1,12 +1,20 @@
 {
   "profiles": {
-    "BackEnd": {
+    "https": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:58499;http://localhost:58500"
+      "applicationUrl": "https://localhost:7065"
+    },
+    "http": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:5065"
     }
   }
 }
