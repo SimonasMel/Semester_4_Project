@@ -29,6 +29,12 @@
         <div class="w-full max-w-[520px] min-h-[720px] bg-white dark:bg-surface-dark rounded-[26px] shadow-light-soft dark:shadow-soft overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800 transition-all duration-300 ease-out @(swipeDirection == SwipeDirection.Right ? "translate-x-[220px] rotate-[14deg] opacity-0" : swipeDirection == SwipeDirection.Left ? "-translate-x-[220px] -rotate-[14deg] opacity-0" : string.Empty)">
 
             <div class="h-[420px] bg-cover bg-center relative" style="background-image: url('@currentCar.PrimaryImagePath');">
+                @if (currentCar.IsDemo)
+                {
+                    <div class="absolute top-4 right-4 px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-full shadow-lg">
+                        Featured
+                    </div>
+                }
                 <div class="absolute bottom-0 left-0 right-0 p-5 text-white bg-gradient-to-t from-black/85 to-transparent">
 
                     <div class="flex flex-col gap-1">
@@ -114,8 +120,19 @@
 
     private async Task LoadCars()
     {
-        var url = $"{Nav.BaseUri}data/cars.json";
-        cars = await Http.GetFromJsonAsync<List<Car>>(url);
+        try
+        {
+            var allCars = await Garage.GetAllCarsAsync();
+            // Only show demo cars (Featured) in the explore page
+            cars = allCars?.Where(c => c.IsDemo).ToList();
+            // Update the remaining cars count in the service
+            Garage.UpdateRemainingCars(cars?.Count ?? 0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading cars from API: {ex.Message}");
+            cars = null;
+        }
     }
 
     private async Task StartSwipe(bool isLike)
@@ -144,6 +161,8 @@
         }
 
         cars.RemoveAt(0);
+        // Update remaining cars count
+        Garage.UpdateRemainingCars(cars.Count);
         swipeDirection = SwipeDirection.None;
         pendingLike = false;
     }

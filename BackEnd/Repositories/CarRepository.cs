@@ -1,40 +1,51 @@
+using Microsoft.EntityFrameworkCore;
 using Shared.Models;
+using BackEnd.Data;
 
 namespace BackEnd.Repositories
 {
     public class CarRepository : ICarRepository
     {
-        private readonly List<Car> _cars = new List<Car>();
+        private readonly CarDbContext _context;
+
+        public CarRepository(CarDbContext context)
+        {
+            _context = context;
+        }
 
         public async Task<IEnumerable<Car>> GetAllAsync()
-            => await Task.FromResult(_cars);
+            => await _context.Cars.ToListAsync();
 
         public async Task<Car?> GetByIdAsync(string id)
-            => await Task.FromResult(_cars.FirstOrDefault(c => c.Id == id));
+            => await _context.Cars.FirstOrDefaultAsync(c => c.Id == id);
 
         public async Task AddAsync(Car car)
         {
-            _cars.Add(car);
-            await Task.CompletedTask;
+            _context.Cars.Add(car);
+            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Car car)
         {
-            var index = _cars.FindIndex(c => c.Id == car.Id);
-            if (index != -1)
-                _cars[index] = car;
-            await Task.CompletedTask;
+            var existing = await _context.Cars.FirstOrDefaultAsync(c => c.Id == car.Id);
+            if (existing != null)
+            {
+                _context.Entry(existing).CurrentValues.SetValues(car);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task DeleteAsync(string id)
         {
-            var car = _cars.FirstOrDefault(c => c.Id == id);
+            var car = await GetByIdAsync(id);
             if (car != null)
-                _cars.Remove(car);
-            await Task.CompletedTask;
+            {
+                _context.Cars.Remove(car);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<bool> ExistsAsync(string id)
-            => await Task.FromResult(_cars.Any(c => c.Id == id));
+            => await _context.Cars.AnyAsync(c => c.Id == id);
     }
 }

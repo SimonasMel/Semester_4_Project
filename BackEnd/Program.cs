@@ -1,4 +1,6 @@
 using BackEnd.Repositories;
+using BackEnd.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,7 +8,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ↓ FIX 1: Register the repository so the controller can use it
+// ↓ FIX 0: Add Entity Framework Core with SQLite
+builder.Services.AddDbContext<CarDbContext>(options =>
+    options.UseSqlite("Data Source=cars.db"));
+
+// ↓ FIX 1: Register the repository as Scoped (not Singleton) to work with Scoped DbContext
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 
 // ↓ FIX 2: Allow Blazor frontend to call this API

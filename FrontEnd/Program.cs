@@ -7,14 +7,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Register HttpClient
-builder.Services.AddHttpClient();
-
+// Register HttpClient for CarService
 builder.Services.AddScoped(sp =>
-    new HttpClient
+{
+    var handler = new HttpClientHandler();
+    // Allow self-signed certificates in development
+    if (builder.Environment.IsDevelopment())
     {
-        BaseAddress = new Uri("https://localhost:7065/")
-    });
+        handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+    }
+
+    var httpClient = new HttpClient(handler)
+    {
+        BaseAddress = new Uri("https://localhost:7065")
+    };
+
+    return httpClient;
+});
 
 // App services
 builder.Services.AddScoped<CarService>();

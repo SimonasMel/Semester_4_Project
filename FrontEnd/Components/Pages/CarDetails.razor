@@ -1,7 +1,9 @@
 @page "/cars/{Brand}/{Model}/{ProductionYear:int}"
+@page "/cars/{Id}"
 @using Shared.Models
 @inject HttpClient Http
 @inject NavigationManager Nav
+@inject CarService CarService
 @rendermode InteractiveServer
 
 <PageTitle>Car Details</PageTitle>
@@ -129,6 +131,7 @@
     [Parameter] public string Brand { get; set; } = string.Empty;
     [Parameter] public string Model { get; set; } = string.Empty;
     [Parameter] public int ProductionYear { get; set; }
+    [Parameter] public string Id { get; set; } = string.Empty;
 
     private Car? car;
     private bool isLoading = true;
@@ -137,18 +140,38 @@
     {
         isLoading = true;
 
-        var url = $"{Nav.BaseUri}data/cars.json";
-        var cars = await Http.GetFromJsonAsync<List<Car>>(url) ?? [];
+        try
+        {
+            // If ID parameter is provided, fetch from API
+            if (!string.IsNullOrEmpty(Id))
+            {
+                car = await CarService.GetCarByIdAsync(Id);
+            }
+            else
+            {
+                // For Brand/Model/Year lookup, query API for all cars
+                var allCars = await CarService.GetAllCarsAsync();
+                if (allCars != null)
+                {
+                    var decodedBrand = Uri.UnescapeDataString(Brand);
+                    var decodedModel = Uri.UnescapeDataString(Model);
 
-        var decodedBrand = Uri.UnescapeDataString(Brand);
-        var decodedModel = Uri.UnescapeDataString(Model);
-
-        car = cars.FirstOrDefault(c =>
-            string.Equals(c.Brand, decodedBrand, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(c.Model, decodedModel, StringComparison.OrdinalIgnoreCase) &&
-            c.ProductionYear == ProductionYear);
-
-        isLoading = false;
+                    car = allCars.FirstOrDefault(c =>
+                        string.Equals(c.Brand, decodedBrand, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(c.Model, decodedModel, StringComparison.OrdinalIgnoreCase) &&
+                        c.ProductionYear == ProductionYear);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading car details: {ex.Message}");
+            car = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private static string GetConsumption(Car car)

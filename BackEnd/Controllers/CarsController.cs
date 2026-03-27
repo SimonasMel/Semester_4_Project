@@ -130,6 +130,7 @@ namespace BackEnd.Controllers
                 {
                     var errors = ModelState.Values.SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage).ToList();
+                    Console.WriteLine($"Validation errors: {string.Join(", ", errors)}");
                     return BadRequest(new { error = "Validation failed", details = errors });
                 }
 
@@ -140,10 +141,12 @@ namespace BackEnd.Controllers
             }
             catch (ArgumentException ex)
             {
+                Console.WriteLine($"ArgumentException in CreateCar: {ex.Message}");
                 return StatusCode(400, new { error = "Invalid car data", details = ex.Message });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Exception in CreateCar: {ex.Message}\n{ex.StackTrace}");
                 return StatusCode(500, new { error = "An error occurred while creating the car", details = ex.Message });
             }
         }
@@ -243,10 +246,12 @@ namespace BackEnd.Controllers
             }
             catch (InvalidOperationException ex)
             {
+                Console.WriteLine($"InvalidOperationException in DeleteCar: {ex.Message}");
                 return StatusCode(400, new { error = "Cannot delete car", details = ex.Message });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Exception in DeleteCar: {ex.Message}\n{ex.StackTrace}");
                 return StatusCode(500, new { error = "An error occurred while deleting the car", details = ex.Message });
             }
         }

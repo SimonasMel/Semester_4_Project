@@ -1,6 +1,8 @@
 ﻿using Xunit;
 using Shared.Models;
 using BackEnd.Repositories;
+using BackEnd.Data;
+using Microsoft.EntityFrameworkCore;
 using BackEnd.Tests.Fixtures;
 
 namespace BackEnd.Tests.Repositories
@@ -14,6 +16,7 @@ namespace BackEnd.Tests.Repositories
     {
         private readonly CarRepositoryFixture _fixture;
         private CarRepository _repository = null!;
+        private CarDbContext _context = null!;
 
         public CarRepositoryIntegrationTests(CarRepositoryFixture fixture)
         {
@@ -25,8 +28,13 @@ namespace BackEnd.Tests.Repositories
         /// </summary>
         public async Task InitializeAsync()
         {
-            // Create a fresh repository instance for this test
-            _repository = new CarRepository();
+            // Create a fresh in-memory database for this test
+            var options = new DbContextOptionsBuilder<CarDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            _context = new CarDbContext(options);
+            _repository = new CarRepository(_context);
 
             // Optionally seed with test data if needed
             foreach (var car in _fixture.TestCars)
@@ -47,6 +55,7 @@ namespace BackEnd.Tests.Repositories
             {
                 await _repository.DeleteAsync(car.Id);
             }
+            await _context.DisposeAsync();
         }
 
         // ==================== GetAllAsync Tests ====================
@@ -54,14 +63,19 @@ namespace BackEnd.Tests.Repositories
         [Fact]
         public async Task GetAllAsync_WhenNoCarsExist_ReturnsEmpty()
         {
-            // Arrange - Clear repository for clean state
-            var freshRepo = new CarRepository();
+            // Arrange - Create fresh repository for clean state
+            var options = new DbContextOptionsBuilder<CarDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+            var freshContext = new CarDbContext(options);
+            var freshRepo = new CarRepository(freshContext);
 
             // Act
             var result = await freshRepo.GetAllAsync();
 
             // Assert
             Assert.Empty(result);
+            await freshContext.DisposeAsync();
         }
 
         [Fact]
