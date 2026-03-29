@@ -26,6 +26,22 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// ↓ NEW: Automatically create and migrate the database on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<CarDbContext>();
+    try
+    {
+        // Apply any pending migrations
+        dbContext.Database.Migrate();
+        Console.WriteLine("✓ Database migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"✗ Error applying migrations: {ex.Message}");
+    }
+}
+
 app.UseSwagger();
 app.UseSwaggerUI();
 

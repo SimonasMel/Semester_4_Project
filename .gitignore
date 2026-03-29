@@ -48,6 +48,11 @@ bld/
 # Visual Studio 2017 auto generated files
 Generated\ Files/
 
+# SQLite database files (generated at runtime)
+*.db
+*.db-shm
+*.db-wal
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
