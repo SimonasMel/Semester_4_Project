@@ -1,6 +1,7 @@
 ﻿using BackEnd.Controllers;
 using BackEnd.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.Models;
 using Xunit;
@@ -10,12 +11,14 @@ namespace BackEnd.Tests.Controllers
     public class CarsControllerTests
     {
         private readonly Mock<ICarRepository> _repositoryMock;
+        private readonly Mock<ILogger<CarsController>> _loggerMock;
         private readonly CarsController _controller;
 
         public CarsControllerTests()
         {
             _repositoryMock = new Mock<ICarRepository>();
-            _controller = new CarsController(_repositoryMock.Object);
+            _loggerMock = new Mock<ILogger<CarsController>>();
+            _controller = new CarsController(_repositoryMock.Object, _loggerMock.Object);
         }
 
         private static Car CreateTestCar(string id = "1") => new()

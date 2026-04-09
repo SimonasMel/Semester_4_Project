@@ -12,14 +12,16 @@ namespace BackEnd.Controllers
     public class CarsController : ControllerBase
     {
         private readonly ICarRepository _repository;
+        private readonly ILogger<CarsController> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CarsController"/> class.
         /// </summary>
         /// <param name="repository">The car repository instance injected via dependency injection.</param>
-        public CarsController(ICarRepository repository)
+        public CarsController(ICarRepository repository, ILogger<CarsController> logger)
         {
             _repository = repository;
+            _logger = logger;
         }
 
         /// <summary>
@@ -47,10 +49,12 @@ namespace BackEnd.Controllers
             }
             catch (System.InvalidOperationException ex)
             {
+                _logger.LogError(ex, "Invalid operation while retrieving cars");
                 return StatusCode(400, new { error = "Invalid operation", details = ex.Message });
             }
             catch (System.Exception ex)
             {
+                _logger.LogError(ex, "Error retrieving cars");
                 return StatusCode(500, new { error = "An error occurred while retrieving cars", details = ex.Message });
             }
         }
@@ -91,10 +95,12 @@ namespace BackEnd.Controllers
             }
             catch (InvalidOperationException ex)
             {
+                _logger.LogError(ex, "Invalid operation while retrieving car {CarId}", id);
                 return StatusCode(400, new { error = "Invalid operation", details = ex.Message });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error retrieving car {CarId}", id);
                 return StatusCode(500, new { error = "An error occurred while retrieving the car", details = ex.Message });
             }
         }
@@ -130,23 +136,21 @@ namespace BackEnd.Controllers
                 {
                     var errors = ModelState.Values.SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage).ToList();
-                    Console.WriteLine($"Validation errors: {string.Join(", ", errors)}");
+                    _logger.LogWarning("Validation errors while creating car: {Errors}", string.Join(", ", errors));
                     return BadRequest(new { error = "Validation failed", details = errors });
                 }
 
                 await _repository.AddAsync(newCar);
-
-                // Returns a 201 Created status and points to the new GetCarById endpoint
                 return CreatedAtAction(nameof(GetCarById), new { id = newCar.Id }, newCar);
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"ArgumentException in CreateCar: {ex.Message}");
+                _logger.LogError(ex, "Invalid car data while creating car");
                 return StatusCode(400, new { error = "Invalid car data", details = ex.Message });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception in CreateCar: {ex.Message}\n{ex.StackTrace}");
+                _logger.LogError(ex, "Error creating car");
                 return StatusCode(500, new { error = "An error occurred while creating the car", details = ex.Message });
             }
         }
@@ -187,13 +191,6 @@ namespace BackEnd.Controllers
                 if (!await _repository.ExistsAsync(id))
                     return NotFound(new { error = $"Car with ID {id} not found" });
 
-                /*if (!ModelState.IsValid)
-                {
-                    var errors = ModelState.Values.SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage).ToList();
-                    return BadRequest(new { error = "Validation failed", details = errors });
-                }*/
-
                 updatedCar.Id = id;
                 await _repository.UpdateAsync(updatedCar);
 
@@ -201,10 +198,12 @@ namespace BackEnd.Controllers
             }
             catch (ArgumentException ex)
             {
+                _logger.LogError(ex, "Invalid car data while updating car {CarId}", id);
                 return StatusCode(400, new { error = "Invalid car data", details = ex.Message });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error updating car {CarId}", id);
                 return StatusCode(500, new { error = "An error occurred while updating the car", details = ex.Message });
             }
         }
@@ -241,17 +240,16 @@ namespace BackEnd.Controllers
                     return NotFound(new { error = $"Car with ID {id} not found" });
 
                 await _repository.DeleteAsync(id);
-
                 return NoContent();
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"InvalidOperationException in DeleteCar: {ex.Message}");
+                _logger.LogError(ex, "Invalid operation while deleting car {CarId}", id);
                 return StatusCode(400, new { error = "Cannot delete car", details = ex.Message });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception in DeleteCar: {ex.Message}\n{ex.StackTrace}");
+                _logger.LogError(ex, "Error deleting car {CarId}", id);
                 return StatusCode(500, new { error = "An error occurred while deleting the car", details = ex.Message });
             }
         }

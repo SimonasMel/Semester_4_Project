@@ -3,6 +3,7 @@
 @inject HttpClient Http
 @inject CarService Garage
 @inject NavigationManager Nav
+@inject ILogger<Index> Logger
 @rendermode InteractiveServer
 
 <div class="w-full max-w-[720px] flex justify-center">
@@ -123,14 +124,14 @@
         try
         {
             var allCars = await Garage.GetAllCarsAsync();
-            // Only show demo cars (Featured) in the explore page
-            cars = allCars?.Where(c => c.IsDemo).ToList();
+            // Only show demo cars (Featured) in the explore page and hide already swiped cars
+            cars = allCars?.Where(c => c.IsDemo && !Garage.IsSwiped(c.Id)).ToList();
             // Update the remaining cars count in the service
             Garage.UpdateRemainingCars(cars?.Count ?? 0);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading cars from API: {ex.Message}");
+            Logger.LogError(ex, "Error loading cars from API");
             cars = null;
         }
     }
@@ -158,6 +159,10 @@
         if (pendingLike)
         {
             Garage.AddMatch(currentCar);
+        }
+        else
+        {
+            Garage.AddSwipe(currentCar);
         }
 
         cars.RemoveAt(0);
