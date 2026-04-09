@@ -1,6 +1,7 @@
 @page "/profile"
 @inject CarService Garage
 @inject NavigationManager Nav
+@inject ILogger<Profile> Logger
 
 <div class="max-w-4xl mx-auto p-6">
 
@@ -195,6 +196,7 @@
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Error loading user cars");
             ErrorMessage = "Failed to load cars: " + ex.Message;
         }
         finally
@@ -263,6 +265,7 @@
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Error adding car {@Car}", NewCar);
             ErrorMessage = "Error adding car: " + ex.Message;
         }
         finally
@@ -304,6 +307,7 @@
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Error deleting car {CarId}", id);
             ErrorMessage = "Error deleting car: " + ex.Message;
             Console.WriteLine($"Delete error: {ex.Message}");
             StateHasChanged();

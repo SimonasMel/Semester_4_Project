@@ -47,7 +47,7 @@
         {
             // Load demo cars and set the remaining count
             var allCars = await Garage.GetAllCarsAsync();
-            var demoCars = allCars?.Where(c => c.IsDemo).ToList() ?? new List<Shared.Models.Car>();
+            var demoCars = allCars?.Where(c => c.IsDemo && !Garage.IsSwiped(c.Id)).ToList() ?? new List<Shared.Models.Car>();
             Garage.UpdateRemainingCars(demoCars.Count);
 
             // Subscribe to CarService changes to update the UI

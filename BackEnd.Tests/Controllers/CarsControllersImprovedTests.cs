@@ -1,6 +1,7 @@
 ﻿using BackEnd.Controllers;
 using BackEnd.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.Models;
 using Xunit;
@@ -14,13 +15,15 @@ namespace BackEnd.Tests.Controllers
     public class CarsControllerFixture : IDisposable
     {
         public Mock<ICarRepository> RepositoryMock { get; }
+        public Mock<ILogger<CarsController>> LoggerMock { get; }
         public CarsController Controller { get; }
 
         public CarsControllerFixture()
         {
             // Setup phase - initialize mocks and dependencies
             RepositoryMock = new Mock<ICarRepository>();
-            Controller = new CarsController(RepositoryMock.Object);
+            LoggerMock = new Mock<ILogger<CarsController>>();
+            Controller = new CarsController(RepositoryMock.Object, LoggerMock.Object);
         }
 
         public void Dispose()

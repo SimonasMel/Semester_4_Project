@@ -1,7 +1,13 @@
 using FrontEnd.Components;
 using FrontEnd.Services;
+using Shared.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddProvider(
+    new FileErrorLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "..", "Logs", "errors.log")));
 
 // Add services to the container
 builder.Services.AddRazorComponents()

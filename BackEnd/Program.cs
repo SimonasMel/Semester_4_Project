@@ -1,8 +1,14 @@
 using BackEnd.Repositories;
 using BackEnd.Data;
 using Microsoft.EntityFrameworkCore;
+using Shared.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddProvider(
+    new FileErrorLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "..", "Logs", "errors.log")));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -29,16 +35,17 @@ var app = builder.Build();
 // ↓ NEW: Automatically create and migrate the database on startup
 using (var scope = app.Services.CreateScope())
 {
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var dbContext = scope.ServiceProvider.GetRequiredService<CarDbContext>();
     try
     {
         // Apply any pending migrations
         dbContext.Database.Migrate();
-        Console.WriteLine("✓ Database migrations applied successfully");
+        logger.LogInformation("Database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"✗ Error applying migrations: {ex.Message}");
+        logger.LogError(ex, "Error applying migrations");
     }
 }
 
