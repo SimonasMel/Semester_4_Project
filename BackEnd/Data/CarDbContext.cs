@@ -1,9 +1,11 @@
+using BackEnd.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 
 namespace BackEnd.Data
 {
-    public class CarDbContext : DbContext
+    public class CarDbContext : IdentityDbContext<ApplicationUser>
     {
         public CarDbContext(DbContextOptions<CarDbContext> options) : base(options)
         {
