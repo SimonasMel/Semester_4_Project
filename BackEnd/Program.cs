@@ -1,6 +1,11 @@
-using BackEnd.Repositories;
+using System.Text;
 using BackEnd.Data;
+using BackEnd.Models;
+using BackEnd.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Shared.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +25,41 @@ builder.Services.AddDbContext<CarDbContext>(options =>
 
 // ↓ FIX 1: Register the repository as Scoped (not Singleton) to work with Scoped DbContext
 builder.Services.AddScoped<ICarRepository, CarRepository>();
+
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+})
+.AddEntityFrameworkStores<CarDbContext>()
+.AddSignInManager()
+.AddDefaultTokenProviders();
+
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("JWT signing key is missing in configuration.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // ↓ FIX 2: Allow Blazor frontend to call this API
 builder.Services.AddCors(options =>
@@ -56,6 +96,7 @@ app.UseSwaggerUI();
 app.UseCors("AllowBlazor");
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

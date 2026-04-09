@@ -1,5 +1,6 @@
 using FrontEnd.Components;
 using FrontEnd.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 using Shared.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,12 @@ builder.Logging.AddProvider(
 // Add services to the container
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<AuthTokenStore>();
+builder.Services.AddScoped<ApiAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ApiAuthStateProvider>());
+builder.Services.AddScoped<AuthService>();
 
 // Register HttpClient for CarService
 builder.Services.AddScoped(sp =>

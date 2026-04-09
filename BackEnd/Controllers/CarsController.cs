@@ -1,6 +1,7 @@
-using Shared.Models;
 using BackEnd.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Models;
 
 namespace BackEnd.Controllers
 {
@@ -9,6 +10,7 @@ namespace BackEnd.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CarsController : ControllerBase
     {
         private readonly ICarRepository _repository;

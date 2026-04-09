@@ -1,18 +1,86 @@
 @page "/setting"
+@inject AuthService Auth
+@inject AuthTokenStore TokenStore
+@inject NavigationManager Nav
 
-<div class="max-w-4xl mx-auto p-6">
+<div class="max-w-6xl mx-auto p-6">
 
-    <h2 class="text-3xl font-bold mb-8 text-primary">Settings</h2>
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-primary">Settings</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 m-0">Manage your account and sign-in options</p>
+    </div>
 
-    <div class="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800">
+    <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 items-start">
+        <div class="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="bi bi-person-badge text-primary"></span>
+                <h3 class="text-xl font-semibold m-0 text-text-dark dark:text-text-light">Account</h3>
+            </div>
 
-        <div class="mb-6">
-            <h3 class="text-xl font-semibold mb-4 text-text-dark dark:text-text-light">Account</h3>
-            <button class="px-6 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-all duration-200 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]">
-                Login / Sign Up
-            </button>
+            <AuthorizeView>
+                <Authorized>
+                    <div class="mb-5 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
+                        <div class="text-xs uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">Signed in as</div>
+                        <div class="text-sm font-semibold text-text-dark dark:text-text-light break-all">@TokenStore.Email</div>
+                    </div>
+
+                    <button class="inline-flex items-center px-6 py-3 rounded-full font-bold transition-all duration-200 active:scale-[0.98] border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 hover:border-red-300 dark:border-slate-700 dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/30"
+                            @onclick="Logout">
+                        <span class="bi bi-box-arrow-right mr-2"></span>
+                        Logout
+                    </button>
+                </Authorized>
+
+                <NotAuthorized>
+                    <div class="mb-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-sm text-slate-600 dark:text-slate-300">
+                        <span class="bi bi-shield-lock mr-2 text-primary"></span>
+                        Sign in to access your cars and protected features.
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <button class="inline-flex items-center px-6 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-all duration-200 shadow-lg shadow-primary/20 active:scale-[0.98]"
+                                @onclick='() => Nav.NavigateTo("/login")'>
+                            <span class="bi bi-box-arrow-in-right mr-2"></span>
+                            Login
+                        </button>
+                        <button class="inline-flex items-center px-6 py-3 border border-primary text-primary rounded-full font-bold hover:bg-primary/10 transition-all duration-200 active:scale-[0.98]"
+                                @onclick='() => Nav.NavigateTo("/register")'>
+                            <span class="bi bi-person-plus mr-2"></span>
+                            Sign Up
+                        </button>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
 
+        <div class="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="bi bi-info-circle text-primary"></span>
+                <h3 class="text-xl font-semibold m-0 text-text-dark dark:text-text-light">Quick Info</h3>
+            </div>
+            <ul class="space-y-3 text-sm text-slate-600 dark:text-slate-300 m-0 p-0 list-none">
+                <li class="flex items-start gap-2">
+                    <span class="bi bi-check2-circle text-primary mt-0.5"></span>
+                    Your session ends automatically when you close the tab.
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="bi bi-check2-circle text-primary mt-0.5"></span>
+                    Liked cars are saved per user and restored after login.
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="bi bi-check2-circle text-primary mt-0.5"></span>
+                    Use this page to manage login and account access.
+                </li>
+            </ul>
+        </div>
     </div>
 
 </div>
+
+@code {
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/login");
+    }
+}

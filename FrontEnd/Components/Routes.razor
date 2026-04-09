@@ -1,15 +1,65 @@
-<Router AppAssembly="@typeof(Program).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <LayoutView Layout="@typeof(Layout.MainLayout)">
-            <div class="flex flex-col items-center justify-center p-20 text-center gap-6">
-                <h1 class="text-6xl font-black text-primary">404</h1>
-                <p class="text-xl text-gray-400">Oops! This car has already left the lot.</p>
-                <NavLink href="" class="px-8 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-colors no-underline">Back to Swiping</NavLink>
-            </div>
-        </LayoutView>
-    </NotFound>
-</Router>
+@using FrontEnd.Components.Pages
+@inject AuthTokenStore TokenStore
+@inject AuthService Auth
+
+<CascadingAuthenticationState>
+    @if (!IsAuthInitialized)
+    {
+        <div class="flex items-center justify-center p-12">
+            <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+    else
+    {
+        <Router AppAssembly="@typeof(Program).Assembly">
+            <Found Context="routeData">
+                @if (IsPublicRoute(routeData.PageType) || TokenStore.IsAuthenticated)
+                {
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                }
+                else
+                {
+                    <LayoutView Layout="@typeof(Layout.MainLayout)">
+                        <div class="flex flex-col items-center justify-center p-20 text-center gap-6">
+                            <h1 class="text-4xl font-black text-primary">Authentication required</h1>
+                            <p class="text-xl text-gray-400">Please log in to access this page.</p>
+                            <NavLink href="/login" class="px-8 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-colors no-underline">Go to Login</NavLink>
+                        </div>
+                    </LayoutView>
+                }
+            </Found>
+            <NotFound>
+                <LayoutView Layout="@typeof(Layout.MainLayout)">
+                    <div class="flex flex-col items-center justify-center p-20 text-center gap-6">
+                        <h1 class="text-6xl font-black text-primary">404</h1>
+                        <p class="text-xl text-gray-400">Oops! This car has already left the lot.</p>
+                        <NavLink href="" class="px-8 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-colors no-underline">Back to Swiping</NavLink>
+                    </div>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    }
+</CascadingAuthenticationState>
+
+@code {
+    private bool IsAuthInitialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await Auth.InitializeAsync();
+        IsAuthInitialized = true;
+        StateHasChanged();
+    }
+
+    private static bool IsPublicRoute(Type pageType) =>
+        pageType == typeof(Login)
+        || pageType == typeof(Register)
+        || pageType == typeof(Error)
+        || pageType == typeof(NotFound);
+}

@@ -1,0 +1,60 @@
+@page "/login"
+@using FrontEnd.Contracts.Auth
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<div class="w-full max-w-[520px] mx-auto bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft p-8">
+    <h1 class="text-2xl font-bold mb-6 text-text-dark dark:text-text-light">Login</h1>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200">@ErrorMessage</div>
+    }
+
+    <EditForm Model="LoginModel" OnValidSubmit="HandleLogin" class="flex flex-col gap-4">
+        <DataAnnotationsValidator />
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest">Email</label>
+            <InputText @bind-Value="LoginModel.Email" type="email" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest">Password</label>
+            <InputText @bind-Value="LoginModel.Password" type="password" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3" />
+        </div>
+
+        <button type="submit" disabled="@IsSubmitting" class="mt-2 px-6 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-colors disabled:opacity-60">
+            @(IsSubmitting ? "Logging in..." : "Login")
+        </button>
+    </EditForm>
+
+    <p class="mt-4 text-sm text-slate-500">
+        No account yet?
+        <NavLink href="/register" class="text-primary font-bold no-underline">Create one</NavLink>
+    </p>
+</div>
+
+@code {
+    private readonly LoginRequest LoginModel = new();
+    private bool IsSubmitting;
+    private string? ErrorMessage;
+
+    private async Task HandleLogin()
+    {
+        IsSubmitting = true;
+        ErrorMessage = null;
+
+        var result = await Auth.LoginAsync(LoginModel);
+
+        IsSubmitting = false;
+
+        if (!result.Success)
+        {
+            ErrorMessage = "Login failed. Check your email/password.";
+            return;
+        }
+
+        Nav.NavigateTo("/");
+    }
+}
