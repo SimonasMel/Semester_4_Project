@@ -39,6 +39,11 @@
                         <button class="bg-primary-blue text-white border-none py-2 px-5 rounded-full cursor-pointer transition-all duration-200 hover:bg-blue-600 shadow-sm hover:shadow-md text-sm font-bold active:scale-[0.98]">
                             Message
                         </button>
+
+                        <button class="bg-red-500 text-white border-none py-2 px-5 rounded-full cursor-pointer hover:bg-red-600 text-sm font-bold"
+                                @onclick="() => Garage.RemoveMatch(car.Id)">
+                            Remove
+                        </button>
                     </div>
 
                 </div>
@@ -51,5 +56,11 @@
 
 @code {
     private static string GetDetailsUrl(Shared.Models.Car car) =>
-        $"/cars/{Uri.EscapeDataString(car.Brand)}/{Uri.EscapeDataString(car.Model)}/{car.ProductionYear}";
-}}
+    $"/cars/{Uri.EscapeDataString(car.Brand)}/{Uri.EscapeDataString(car.Model)}/{car.ProductionYear}";
+
+    private void RemoveCar(Car car)
+    {
+		Garage.MatchedCars.Remove(car);
+    }
+
+     }
