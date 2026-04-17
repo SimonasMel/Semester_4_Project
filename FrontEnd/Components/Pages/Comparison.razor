@@ -64,8 +64,8 @@
                 <tbody>
                     <tr>
                         <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Year</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.ProductionYear</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.ProductionYear</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.ProductionYear), Convert.ToDouble(car2.ProductionYear), higherIsBetter: true))">@car1.ProductionYear</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.ProductionYear), Convert.ToDouble(car2.ProductionYear), higherIsBetter: true))">@car2.ProductionYear</td>
                     </tr>
 
                     <tr>
@@ -88,26 +88,26 @@
 
                     <tr>
                         <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Power (kW)</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.EnginePowerKW</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.EnginePowerKW</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.EnginePowerKW), Convert.ToDouble(car2.EnginePowerKW), higherIsBetter: true))">@car1.EnginePowerKW</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.EnginePowerKW), Convert.ToDouble(car2.EnginePowerKW), higherIsBetter: true))">@car2.EnginePowerKW</td>
                     </tr>
 
                     <tr>
                         <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Fuel Consumption</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.FuelConsumptionLitersPer100Km</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.FuelConsumptionLitersPer100Km</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.FuelConsumptionLitersPer100Km), Convert.ToDouble(car2.FuelConsumptionLitersPer100Km), higherIsBetter: false))">@car1.FuelConsumptionLitersPer100Km</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.FuelConsumptionLitersPer100Km), Convert.ToDouble(car2.FuelConsumptionLitersPer100Km), higherIsBetter: false))">@car2.FuelConsumptionLitersPer100Km</td>
                     </tr>
 
                     <tr>
                         <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Price</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">€@car1.Price</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">€@car2.Price</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.Price), Convert.ToDouble(car2.Price), higherIsBetter: false))">€@car1.Price</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.Price), Convert.ToDouble(car2.Price), higherIsBetter: false))">€@car2.Price</td>
                     </tr>
 
                     <tr>
                         <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Mileage</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.MileageKm km</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.MileageKm km</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.MileageKm), Convert.ToDouble(car2.MileageKm), higherIsBetter: false))">@car1.MileageKm km</td>
+                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.MileageKm), Convert.ToDouble(car2.MileageKm), higherIsBetter: false))">@car2.MileageKm km</td>
                     </tr>
 
                     <tr>
@@ -126,4 +126,28 @@
 @code {
     private int SelectedCar1Index { get; set; } = 0;
     private int SelectedCar2Index { get; set; } = 1;
+
+    private string GetLeftCellClassNumeric(double left, double right, bool higherIsBetter)
+    {
+        if (double.IsNaN(left) || double.IsNaN(right))
+            return string.Empty;
+
+        if (Math.Abs(left - right) < 0.0001)
+            return string.Empty;
+
+        bool leftIsBetter = higherIsBetter ? left > right : left < right;
+        return leftIsBetter ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : string.Empty;
+    }
+
+    private string GetRightCellClassNumeric(double left, double right, bool higherIsBetter)
+    {
+        if (double.IsNaN(left) || double.IsNaN(right))
+            return string.Empty;
+
+        if (Math.Abs(left - right) < 0.0001)
+            return string.Empty;
+
+        bool rightIsBetter = higherIsBetter ? right > left : right < left;
+        return rightIsBetter ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : string.Empty;
+    }
 }
