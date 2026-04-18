@@ -1,0 +1,141 @@
+﻿@page "/preferences"
+@inject CarService CarService
+@inject NavigationManager Nav
+
+<div class="max-w-2xl mx-auto p-6">
+    <h2 class="text-3xl font-bold mb-8 text-primary">My Preferences</h2>
+
+    <div class="bg-white dark:bg-surface-dark rounded-2xl border border-slate-200
+        dark:border-slate-800 shadow-light-soft dark:shadow-soft p-6 flex flex-col gap-6">
+
+        @* Brand *@
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-bold text-text-muted dark:text-gray-400">Preferred Brand</label>
+            <input @bind="prefs.PreferredBrand" placeholder="e.g. BMW, Toyota (leave empty for any)"
+                   class="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent
+            px-4 py-2 text-text-dark dark:text-text-light focus:outline-none
+            focus:border-primary" />
+        </div>
+
+        @* Price *@
+        <div class="flex gap-4">
+            <div class="flex flex-col gap-1 flex-1">
+                <label class="text-sm font-bold text-text-muted dark:text-gray-400">Min Price (€)</label>
+                <input type="number" @bind="prefs.MinPrice" placeholder="0"
+                       class="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent
+                px-4 py-2 text-text-dark dark:text-text-light focus:outline-none focus:border-primary" />
+            </div>
+            <div class="flex flex-col gap-1 flex-1">
+                <label class="text-sm font-bold text-text-muted dark:text-gray-400">Max Price (€)</label>
+                <input type="number" @bind="prefs.MaxPrice" placeholder="Any"
+                       class="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent
+                px-4 py-2 text-text-dark dark:text-text-light focus:outline-none focus:border-primary" />
+            </div>
+        </div>
+
+        @* Year *@
+        <div class="flex gap-4">
+            <div class="flex flex-col gap-1 flex-1">
+                <label class="text-sm font-bold text-text-muted dark:text-gray-400">Min Year</label>
+                <input type="number" @bind="prefs.MinYear" placeholder="1980"
+                       class="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent
+                px-4 py-2 text-text-dark dark:text-text-light focus:outline-none focus:border-primary" />
+            </div>
+            <div class="flex flex-col gap-1 flex-1">
+                <label class="text-sm font-bold text-text-muted dark:text-gray-400">Max Year</label>
+                <input type="number" @bind="prefs.MaxYear" placeholder="2026"
+                       class="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent
+                px-4 py-2 text-text-dark dark:text-text-light focus:outline-none focus:border-primary" />
+            </div>
+        </div>
+
+        @* Mileage *@
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-bold text-text-muted dark:text-gray-400">Max Mileage (km)</label>
+            <input type="number" @bind="prefs.MaxMileageKm" placeholder="Any"
+                   class="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent
+            px-4 py-2 text-text-dark dark:text-text-light focus:outline-none focus:border-primary" />
+        </div>
+
+        @* Engine Power *@
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-bold text-text-muted dark:text-gray-400">Min Engine Power (kW)</label>
+            <input type="number" @bind="prefs.MinEnginePowerKW" placeholder="Any"
+                   class="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent
+            px-4 py-2 text-text-dark dark:text-text-light focus:outline-none focus:border-primary" />
+        </div>
+
+        @* Fuel Type *@
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-bold text-text-muted dark:text-gray-400">Fuel Type</label>
+            <select @bind="prefs.FuelType"
+                    class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white
+                dark:bg-surface-dark px-4 py-2 text-text-dark dark:text-text-light
+                focus:outline-none focus:border-primary">
+                <option value="">Any</option>
+                @foreach (var val in Enum.GetValues<FuelCategory>())
+                {
+                    <option value="@val">@val</option>
+                }
+            </select>
+        </div>
+
+        @* Transmission *@
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-bold text-text-muted dark:text-gray-400">Transmission</label>
+            <select @bind="prefs.Transmission"
+                    class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white
+                dark:bg-surface-dark px-4 py-2 text-text-dark dark:text-text-light
+                focus:outline-none focus:border-primary">
+                <option value="">Any</option>
+                @foreach (var val in Enum.GetValues<TransmissionCategory>())
+                {
+                    <option value="@val">@val</option>
+                }
+            </select>
+        </div>
+
+        @* Body Type *@
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-bold text-text-muted dark:text-gray-400">Body Type</label>
+            <select @bind="prefs.BodyType"
+                    class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white
+                dark:bg-surface-dark px-4 py-2 text-text-dark dark:text-text-light
+                focus:outline-none focus:border-primary">
+                <option value="">Any</option>
+                @foreach (var val in Enum.GetValues<BodyCategory>())
+                {
+                    <option value="@val">@val</option>
+                }
+            </select>
+        </div>
+
+        @* Save button *@
+        <button @onclick="Save"
+                class="mt-2 px-8 py-3 bg-primary text-[#022c22] rounded-full font-bold
+            hover:bg-green-400 transition-all duration-200 shadow-lg
+            shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]">
+            @(saved ? "✓ Saved!" : "Save Preferences")
+        </button>
+
+    </div>
+</div>
+
+@code {
+    private UserPreferences prefs = new();
+    private bool saved = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        prefs = await CarService.GetPreferencesAsync() ?? new UserPreferences();
+    }
+
+    private async Task Save()
+    {
+        await CarService.SavePreferencesAsync(prefs);
+        saved = true;
+        await Task.Delay(10000);
+        saved = false;
+        StateHasChanged();
+    }
+}

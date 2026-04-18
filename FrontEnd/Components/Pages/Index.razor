@@ -114,7 +114,7 @@
     private SwipeDirection swipeDirection = SwipeDirection.None;
     private bool pendingLike;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await LoadCars();
     }
@@ -123,10 +123,10 @@
     {
         try
         {
+            await Garage.GetPreferencesAsync();
             var allCars = await Garage.GetAllCarsAsync();
-            // Only show demo cars (Featured) in the explore page and hide already swiped cars
             cars = allCars?.Where(c => c.IsDemo && !Garage.IsSwiped(c.Id)).ToList();
-            // Update the remaining cars count in the service
+            cars = Garage.GetSortedCars(cars ?? new List<Car>()); 
             Garage.UpdateRemainingCars(cars?.Count ?? 0);
         }
         catch (Exception ex)

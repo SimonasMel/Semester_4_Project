@@ -252,5 +252,48 @@ namespace FrontEnd.Services
             RemainingCars = count;
             OnChange?.Invoke();
         }
+        //Preferences
+        private UserPreferences? _preferences;
+
+        public async Task<UserPreferences?> GetPreferencesAsync()
+        {
+            ApplyAuthHeader(); 
+            var response = await _http.GetAsync("api/preferences");
+            if (response.IsSuccessStatusCode)
+                _preferences = await response.Content.ReadFromJsonAsync<UserPreferences>();
+            return _preferences;
+        }
+
+        public async Task SavePreferencesAsync(UserPreferences prefs)
+        {
+            ApplyAuthHeader(); 
+            await _http.PostAsJsonAsync("api/preferences", prefs);
+            _preferences = prefs;
+        }
+
+        public int ScoreCar(Car car)
+        {
+            if (_preferences == null) return 0;
+            int score = 0;
+
+            if (!string.IsNullOrEmpty(_preferences.PreferredBrand) &&
+                car.Brand.Equals(_preferences.PreferredBrand, StringComparison.OrdinalIgnoreCase)) score += 3;
+            if (_preferences.FuelType.HasValue && car.FuelType == _preferences.FuelType) score += 2;
+            if (_preferences.Transmission.HasValue && car.Transmission == _preferences.Transmission) score += 2;
+            if (_preferences.BodyType.HasValue && car.BodyType == _preferences.BodyType) score += 2;
+            if (_preferences.MinPrice.HasValue && car.Price >= _preferences.MinPrice) score++;
+            if (_preferences.MaxPrice.HasValue && car.Price <= _preferences.MaxPrice) score++;
+            if (_preferences.MinYear.HasValue && car.ProductionYear >= _preferences.MinYear) score++;
+            if (_preferences.MaxYear.HasValue && car.ProductionYear <= _preferences.MaxYear) score++;
+            if (_preferences.MaxMileageKm.HasValue && car.MileageKm <= _preferences.MaxMileageKm) score++;
+            if (_preferences.MinEnginePowerKW.HasValue && car.EnginePowerKW >= _preferences.MinEnginePowerKW) score++;
+
+            return score;
+        }
+
+        public List<Car> GetSortedCars(List<Car> cars)
+        {
+            return cars.OrderByDescending(ScoreCar).ToList();
+        }
     }
 }

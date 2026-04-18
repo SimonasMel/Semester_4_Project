@@ -7,11 +7,10 @@ namespace BackEnd.Data
 {
     public class CarDbContext : IdentityDbContext<ApplicationUser>
     {
-        public CarDbContext(DbContextOptions<CarDbContext> options) : base(options)
-        {
-        }
+        public CarDbContext(DbContextOptions<CarDbContext> options) : base(options) { }
 
         public DbSet<Car> Cars { get; set; }
+        public DbSet<UserPreferences> UserPreferences { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,6 +25,13 @@ namespace BackEnd.Data
                 entity.Property(e => e.ContactInfo).IsRequired(false);
                 entity.Property(e => e.PrimaryImagePath).IsRequired();
                 entity.Property(e => e.VIN).IsRequired(false);
+            });
+
+            modelBuilder.Entity<UserPreferences>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.HasIndex(e => e.UserId).IsUnique(); // one preferences row per user
             });
         }
     }

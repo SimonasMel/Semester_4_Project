@@ -1,6 +1,9 @@
 @page "/matches"
 @inject CarService Garage
 
+
+@* Hidden element to force Tailwind CDN to register these classes *@
+<div class="hidden bg-red-500 hover:bg-red-600 bg-primary-blue hover:bg-blue-600"></div>
 <div class="max-w-4xl mx-auto p-6">
 
     <h2 class="text-3xl font-bold mb-8 text-primary">My Garage</h2>
@@ -40,7 +43,9 @@
                             Message
                         </button>
 
-                        <button class="bg-red-500 text-white border-none py-2 px-5 rounded-full cursor-pointer hover:bg-red-600 text-sm font-bold"
+                        <button class="bg-red-500 text-white border-none py-2 px-5 rounded-full cursor-pointer
+                            hover:bg-red-600 transition-all duration-200 active:scale-[0.98]
+                            text-sm font-bold shadow-sm hover:shadow-md"
                                 @onclick="() => Garage.RemoveMatch(car.Id)">
                             Remove
                         </button>
@@ -57,10 +62,4 @@
 @code {
     private static string GetDetailsUrl(Shared.Models.Car car) =>
     $"/cars/{Uri.EscapeDataString(car.Brand)}/{Uri.EscapeDataString(car.Model)}/{car.ProductionYear}";
-
-    private void RemoveCar(Car car)
-    {
-		Garage.MatchedCars.Remove(car);
-    }
-
      }
