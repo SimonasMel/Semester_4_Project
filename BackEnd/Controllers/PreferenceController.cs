@@ -44,12 +44,10 @@ namespace BackEnd.Controllers
             else
             {
                 existing.PreferredBrand = prefs.PreferredBrand;
-                existing.MinPrice = prefs.MinPrice;
-                existing.MaxPrice = prefs.MaxPrice;
-                existing.MinYear = prefs.MinYear;
-                existing.MaxYear = prefs.MaxYear;
-                existing.MaxMileageKm = prefs.MaxMileageKm;
-                existing.MinEnginePowerKW = prefs.MinEnginePowerKW;
+                existing.PreferredPrice = prefs.PreferredPrice;
+                existing.PreferredYear = prefs.PreferredYear;
+                existing.MileageKm = prefs.MileageKm;
+                existing.EnginePowerKW = prefs.EnginePowerKW;
                 existing.FuelType = prefs.FuelType;
                 existing.Transmission = prefs.Transmission;
                 existing.BodyType = prefs.BodyType;

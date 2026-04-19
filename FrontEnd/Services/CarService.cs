@@ -276,17 +276,52 @@ namespace FrontEnd.Services
             if (_preferences == null) return 0;
             int score = 0;
 
-            if (!string.IsNullOrEmpty(_preferences.PreferredBrand) &&
+            if (_preferences.UseBrand && !string.IsNullOrEmpty(_preferences.PreferredBrand) &&
                 car.Brand.Equals(_preferences.PreferredBrand, StringComparison.OrdinalIgnoreCase)) score += 3;
-            if (_preferences.FuelType.HasValue && car.FuelType == _preferences.FuelType) score += 2;
-            if (_preferences.Transmission.HasValue && car.Transmission == _preferences.Transmission) score += 2;
-            if (_preferences.BodyType.HasValue && car.BodyType == _preferences.BodyType) score += 2;
-            if (_preferences.MinPrice.HasValue && car.Price >= _preferences.MinPrice) score++;
-            if (_preferences.MaxPrice.HasValue && car.Price <= _preferences.MaxPrice) score++;
-            if (_preferences.MinYear.HasValue && car.ProductionYear >= _preferences.MinYear) score++;
-            if (_preferences.MaxYear.HasValue && car.ProductionYear <= _preferences.MaxYear) score++;
-            if (_preferences.MaxMileageKm.HasValue && car.MileageKm <= _preferences.MaxMileageKm) score++;
-            if (_preferences.MinEnginePowerKW.HasValue && car.EnginePowerKW >= _preferences.MinEnginePowerKW) score++;
+
+            if (_preferences.UseFuelType && _preferences.FuelType.HasValue &&
+                car.FuelType == _preferences.FuelType) score += 2;
+
+            if (_preferences.UseTransmission && _preferences.Transmission.HasValue &&
+                car.Transmission == _preferences.Transmission) score += 2;
+
+            if (_preferences.UseBodyType && _preferences.BodyType.HasValue &&
+                car.BodyType == _preferences.BodyType) score += 2;
+
+            if (_preferences.UseYear && _preferences.PreferredYear.HasValue)
+            {
+                var yearDiff = Math.Abs(car.ProductionYear - _preferences.PreferredYear.Value);
+                if (yearDiff == 0) score += 3;
+                else if (yearDiff <= 2) score += 2;
+                else if (yearDiff <= 5) score += 1;
+            }
+
+            if (_preferences.UsePrice && _preferences.PreferredPrice.HasValue && _preferences.PreferredPrice > 0)
+            {
+                var priceDiff = Math.Abs(car.Price - _preferences.PreferredPrice.Value);
+                var pricePercent = priceDiff / _preferences.PreferredPrice.Value * 100;
+                if (pricePercent <= 5) score += 3;
+                else if (pricePercent <= 15) score += 2;
+                else if (pricePercent <= 30) score += 1;
+            }
+
+            if (_preferences.UseMileage && _preferences.MileageKm.HasValue)
+            {
+                var mileageDiff = Math.Abs(car.MileageKm - _preferences.MileageKm.Value);
+                var mileagePercent = mileageDiff / (double)Math.Max(_preferences.MileageKm.Value, 1) * 100;
+                if (mileagePercent <= 5) score += 3;
+                else if (mileagePercent <= 20) score += 2;
+                else if (mileagePercent <= 40) score += 1;
+            }
+
+            if (_preferences.UseEnginePower && _preferences.EnginePowerKW.HasValue)
+            {
+                var powerDiff = Math.Abs(car.EnginePowerKW - _preferences.EnginePowerKW.Value);
+                var powerPercent = powerDiff / (double)Math.Max(_preferences.EnginePowerKW.Value, 1) * 100;
+                if (powerPercent <= 5) score += 3;
+                else if (powerPercent <= 20) score += 2;
+                else if (powerPercent <= 40) score += 1;
+            }
 
             return score;
         }
