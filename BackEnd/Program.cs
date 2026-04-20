@@ -29,11 +29,11 @@ builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
 {
     options.User.RequireUniqueEmail = true;
-    options.Password.RequiredLength = 6;
+    options.Password.RequiredLength = 8;
     options.Password.RequireDigit = true;
-    options.Password.RequireUppercase = false;
+    options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
-    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireNonAlphanumeric = true;
 })
 .AddEntityFrameworkStores<CarDbContext>()
 .AddSignInManager()
@@ -61,16 +61,42 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-// ↓ FIX 2: Allow Blazor frontend to call this API
+// Add CORS with environment-specific configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazor", policy =>
-        policy.WithOrigins("https://localhost:7140")
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        ?? new[] { "https://localhost:7140" };
+
+    options.AddPolicy("AllowFrontEnd", policy =>
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
-              .AllowAnyHeader());
+              .WithHeaders("Content-Type", "Authorization")
+              .AllowCredentials());
 });
 
 var app = builder.Build();
+
+// ↓ Security Headers Middleware
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    if (!app.Environment.IsDevelopment())
+    {
+        context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+        context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self'");
+    }
+    await next();
+});
+
+// ↓ Only enable Swagger in Development
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // ↓ NEW: Automatically create and migrate the database on startup
 using (var scope = app.Services.CreateScope())
@@ -92,10 +118,16 @@ using (var scope = app.Services.CreateScope())
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// ↓ FIX 3: Apply the CORS policy (must be before UseAuthorization)
-app.UseCors("AllowBlazor");
+// ↓ Apply the CORS policy (must be before UseAuthorization)
+app.UseCors("AllowFrontEnd");
 
 app.UseHttpsRedirection();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/error");
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
