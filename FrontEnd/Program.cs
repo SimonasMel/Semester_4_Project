@@ -23,16 +23,10 @@ builder.Services.AddScoped<AuthService>();
 // Register HttpClient for CarService
 builder.Services.AddScoped(sp =>
 {
-    var handler = new HttpClientHandler();
-    // Allow self-signed certificates in development
-    if (builder.Environment.IsDevelopment())
+    var backendUrl = builder.Configuration["Backend:ApiUrl"] ?? "https://localhost:7065";
+    var httpClient = new HttpClient
     {
-        handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
-    }
-
-    var httpClient = new HttpClient(handler)
-    {
-        BaseAddress = new Uri("https://localhost:7065")
+        BaseAddress = new Uri(backendUrl)
     };
 
     return httpClient;
@@ -44,11 +38,31 @@ builder.Services.AddScoped<ThemeService>();
 
 var app = builder.Build();
 
+// ↓ Security Headers Middleware
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    if (!app.Environment.IsDevelopment())
+    {
+        context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+        context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'");
+    }
+    await next();
+});
+
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
+}
+else
+{
+    // In development, still use exception handler but with more verbose output
+    app.UseDeveloperExceptionPage();
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
