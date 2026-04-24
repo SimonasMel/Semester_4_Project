@@ -121,6 +121,7 @@ app.UseSwaggerUI();
 // ↓ Apply the CORS policy (must be before UseAuthorization)
 app.UseCors("AllowFrontEnd");
 
+app.UseStaticFiles(); // Added for image serving
 app.UseHttpsRedirection();
 
 if (!app.Environment.IsDevelopment())

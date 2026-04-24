@@ -92,8 +92,12 @@
             </div>
 
             <div class="flex flex-col gap-2 md:col-span-2">
-                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Primary Image URL</label>
-                <input @bind="NewCar.PrimaryImagePath" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="https://example.com/car.jpg" required />
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Car Images</label>
+                <InputFile OnChange="HandleImagesSelected" multiple accept="image/*" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" />
+                @if (selectedFiles.Any())
+                {
+                    <p class="text-sm text-slate-500">Selected @selectedFiles.Count files.</p>
+                }
             </div>
 
             <div class="flex flex-col gap-2 md:col-span-2">
@@ -181,6 +185,9 @@
     private bool IsLoadingCars { get; set; }
     private string? IsDeletingId { get; set; }
 
+    private IReadOnlyList<IBrowserFile> selectedFiles = new List<IBrowserFile>();
+    private long maxFileSize = 10 * 1024 * 1024; // 10 MB per file
+
     protected override async Task OnInitializedAsync()
     {
         await LoadUserCars();
@@ -191,7 +198,7 @@
         try
         {
             IsLoadingCars = true;
-            var allCars = await Garage.GetAllCarsAsync();
+            var allCars = await Garage.GetUserCarsAsync();
             AddedCars = allCars?.Where(c => !c.IsDemo).ToList() ?? new List<Shared.Models.Car>();
         }
         catch (Exception ex)
@@ -244,6 +251,42 @@
             IsSubmitting = true;
             ErrorMessage = null;
 
+            // Upload images first
+            if (selectedFiles.Any())
+            {
+                using var content = new MultipartFormDataContent();
+                foreach (var file in selectedFiles)
+                {
+                    try
+                    {
+                        var fileContent = new StreamContent(file.OpenReadStream(maxFileSize));
+                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                        content.Add(fileContent, "files", file.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, "Error processing file: {FileName}", file.Name);
+                        ErrorMessage = $"File {file.Name} exceeds the maximum size limit or is unreadable.";
+                        IsSubmitting = false;
+                        return;
+                    }
+                }
+
+                var uploadedUrls = await Garage.UploadCarImagesAsync(content);
+                if (uploadedUrls.Any())
+                {
+                    NewCar.PrimaryImagePath = uploadedUrls.First();
+                    NewCar.AdditionalImagePaths = uploadedUrls.Skip(1).ToList();
+                }
+            }
+
+            if (string.IsNullOrEmpty(NewCar.PrimaryImagePath))
+            {
+                ErrorMessage = "Please select at least one image.";
+                IsSubmitting = false;
+                return;
+            }
+
             // Send to API
             var success = await Garage.CreateCarAsync(NewCar);
 
@@ -252,6 +295,7 @@
                 SuccessMessage = $"Successfully added {NewCar.Brand} {NewCar.Model}!";
                 AddedCars.Add(NewCar);
                 NewCar = new Shared.Models.Car();
+                selectedFiles = new List<IBrowserFile>();
                 StateHasChanged();
 
                 // Clear success message after 3 seconds
@@ -317,6 +361,12 @@
             IsDeletingId = null;
             StateHasChanged();
         }
+    }
+
+    private void HandleImagesSelected(InputFileChangeEventArgs e)
+    {
+        var maxAllowedFiles = 10;
+        selectedFiles = e.GetMultipleFiles(maxAllowedFiles);
     }
 
     private void ViewCar(string id)

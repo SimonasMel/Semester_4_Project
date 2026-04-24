@@ -16,6 +16,9 @@ namespace BackEnd.Repositories
         public async Task<IEnumerable<Car>> GetAllAsync()
             => await _context.Cars.ToListAsync();
 
+        public async Task<IEnumerable<Car>> GetUserCarsAsync(string userId)
+            => await _context.Cars.Where(c => c.UserId == userId).ToListAsync();
+
         public async Task<Car?> GetByIdAsync(string id)
             => await _context.Cars.FirstOrDefaultAsync(c => c.Id == id);
 

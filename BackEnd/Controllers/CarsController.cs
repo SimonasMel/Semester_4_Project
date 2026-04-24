@@ -2,6 +2,7 @@ using BackEnd.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Models;
+using System.Security.Claims;
 
 namespace BackEnd.Controllers
 {
@@ -58,6 +59,27 @@ namespace BackEnd.Controllers
             {
                 _logger.LogError(ex, "Error retrieving cars");
                 return StatusCode(500, new { error = "An error occurred while retrieving cars", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Retrieves cars belonging to the current user.
+        /// </summary>
+        [HttpGet("my")]
+        public async Task<ActionResult<IEnumerable<Car>>> GetMyCars()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { error = "User not logged in" });
+
+                return Ok(await _repository.GetUserCarsAsync(userId));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user's cars");
+                return StatusCode(500, new { error = "An error occurred while retrieving your cars", details = ex.Message });
             }
         }
 
@@ -142,6 +164,8 @@ namespace BackEnd.Controllers
                     return BadRequest(new { error = "Validation failed", details = errors });
                 }
 
+                newCar.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "default";
+
                 await _repository.AddAsync(newCar);
                 return CreatedAtAction(nameof(GetCarById), new { id = newCar.Id }, newCar);
             }
@@ -190,10 +214,16 @@ namespace BackEnd.Controllers
                 if (updatedCar == null)
                     return BadRequest(new { error = "Car data is required" });
 
-                if (!await _repository.ExistsAsync(id))
+                var existingCar = await _repository.GetByIdAsync(id);
+                if (existingCar == null)
                     return NotFound(new { error = $"Car with ID {id} not found" });
 
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (existingCar.UserId != userId && userId != null)
+                    return Forbid();
+
                 updatedCar.Id = id;
+                updatedCar.UserId = existingCar.UserId; // Preserve the original owner
                 await _repository.UpdateAsync(updatedCar);
 
                 return NoContent();
@@ -238,8 +268,13 @@ namespace BackEnd.Controllers
                 if (string.IsNullOrWhiteSpace(id))
                     return BadRequest(new { error = "ID cannot be empty" });
 
-                if (!await _repository.ExistsAsync(id))
+                var car = await _repository.GetByIdAsync(id);
+                if (car == null)
                     return NotFound(new { error = $"Car with ID {id} not found" });
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (car.UserId != userId && userId != null)
+                    return Forbid();
 
                 await _repository.DeleteAsync(id);
                 return NoContent();
@@ -253,6 +288,52 @@ namespace BackEnd.Controllers
             {
                 _logger.LogError(ex, "Error deleting car {CarId}", id);
                 return StatusCode(500, new { error = "An error occurred while deleting the car", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Uploads images for a car.
+        /// </summary>
+        [HttpPost("upload")]
+        [AllowAnonymous] // Ideally should be authorized, but just in case for debugging
+        public async Task<IActionResult> UploadImages(IFormFileCollection files)
+        {
+            try
+            {
+                if (files == null || files.Count == 0)
+                    return BadRequest(new { error = "No files uploaded" });
+
+                var uploadedUrls = new List<string>();
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        // Use a URL path accessible by the frontend
+                        var backendUrl = $"{Request.Scheme}://{Request.Host}";
+                        var fileUrl = $"{backendUrl}/images/{uniqueFileName}";
+                        uploadedUrls.Add(fileUrl);
+                    }
+                }
+
+                return Ok(new { urls = uploadedUrls });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading images");
+                return StatusCode(500, new { error = "An error occurred while uploading images", details = ex.Message });
             }
         }
     }

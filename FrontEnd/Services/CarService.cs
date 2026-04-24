@@ -139,6 +139,22 @@ namespace FrontEnd.Services
             }
         }
 
+        public async Task<List<Car>> GetUserCarsAsync()
+        {
+            try
+            {
+                await EnsureUserDataLoadedAsync();
+                ApplyAuthHeader();
+                var result = await _http.GetFromJsonAsync<List<Car>>("api/cars/my");
+                return result ?? new List<Car>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user cars");
+                throw;
+            }
+        }
+
         public async Task<Car?> GetCarByIdAsync(string id)
         {
             try
@@ -171,6 +187,34 @@ namespace FrontEnd.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating car {Brand} {Model}", car.Brand, car.Model);
+                throw;
+            }
+        }
+
+        public class UploadResult
+        {
+            public List<string> Urls { get; set; } = new();
+        }
+
+        public async Task<List<string>> UploadCarImagesAsync(MultipartFormDataContent content)
+        {
+            try
+            {
+                ApplyAuthHeader(); // Optional depending on backend AllowAnonymous config
+                var response = await _http.PostAsync("api/cars/upload", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<UploadResult>();
+                    return result?.Urls ?? new List<string>();
+                }
+                
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Error uploading images. Status: {StatusCode}. Response: {Response}", response.StatusCode, errorContent);
+                return new List<string>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading images");
                 throw;
             }
         }

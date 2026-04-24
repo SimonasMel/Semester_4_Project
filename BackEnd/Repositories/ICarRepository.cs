@@ -5,6 +5,7 @@ namespace BackEnd.Repositories
     public interface ICarRepository
     {
         Task<IEnumerable<Car>> GetAllAsync();
+        Task<IEnumerable<Car>> GetUserCarsAsync(string userId);
         Task<Car?> GetByIdAsync(string id);
         Task AddAsync(Car car);
         Task UpdateAsync(Car car);

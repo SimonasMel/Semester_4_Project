@@ -96,6 +96,8 @@ namespace Shared.Models
         [Display(Name = "Is Demo Car")]
         public bool IsDemo { get; set; } = false;
 
+        public string UserId { get; set; } = string.Empty;
+
         public Car()
         {
             Id = Guid.NewGuid().ToString();
