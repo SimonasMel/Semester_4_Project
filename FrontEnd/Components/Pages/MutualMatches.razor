@@ -1,0 +1,79 @@
+@page "/mutual-matches"
+@inject CarService Garage
+@inject NavigationManager Nav
+
+<div class="max-w-4xl mx-auto p-6">
+    <h2 class="text-3xl font-bold mb-8 text-primary">💕 Mutual Matches</h2>
+
+    @if (Garage.GetMutualMatches().Count == 0)
+    {
+        <div class="flex flex-col items-center justify-center p-20 text-center gap-6 bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft">
+            <div class="w-16 h-16 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2">
+                <span class="bi bi-heart-break text-3xl text-gray-300 dark:text-gray-600"></span>
+            </div>
+            <p class="text-text-muted dark:text-gray-400 font-medium">No matches yet. Keep swiping!</p>
+            <NavLink href="/" class="px-8 py-3 bg-primary text-[#022c22] rounded-full font-bold hover:bg-green-400 transition-all duration-200 no-underline shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]">
+                Start Swiping
+            </NavLink>
+        </div>
+    }
+    else
+    {
+        <div class="flex flex-col gap-5 w-full max-w-[900px]">
+            @foreach (var match in Garage.GetMutualMatches())
+            {
+                <div class="flex items-center bg-white dark:bg-surface-dark p-4 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-pink-400/50 dark:hover:border-pink-400/30">
+
+                    <div class="flex-grow">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">💕</span>
+                            <h4 class="text-lg font-bold text-text-dark dark:text-text-light">Mutual Match!</h4>
+                            <span class="text-xs text-text-muted dark:text-gray-400">@match.MatchedDate.ToString("MMM dd, yyyy")</span>
+                        </div>
+                        <p class="text-sm text-text-muted dark:text-gray-400 m-0">
+                            You matched with another car enthusiast
+                        </p>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button class="bg-primary-blue text-white border-none py-2 px-5 rounded-full cursor-pointer transition-all duration-200 hover:bg-blue-600 shadow-sm hover:shadow-md text-sm font-bold active:scale-[0.98]"
+                                @onclick="() => OpenChat(match.Id)">
+                            💬 Chat
+                        </button>
+
+                        <button class="bg-red-500 text-white border-none py-2 px-5 rounded-full cursor-pointer hover:bg-red-600 transition-all duration-200 active:scale-[0.98] text-sm font-bold shadow-sm hover:shadow-md"
+                                @onclick="() => UnmatchAsync(match.Id)">
+                            💔 Unmatch
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        Garage.OnChange += StateHasChanged;
+        await Garage.GetMutualMatchesAsync();
+    }
+
+    private void OpenChat(string matchId)
+    {
+        Nav.NavigateTo($"/chat/{matchId}");
+    }
+
+    private async Task UnmatchAsync(string matchId)
+    {
+        if (await Garage.RemoveMutualMatchAsync(matchId))
+        {
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        Garage.OnChange -= StateHasChanged;
+    }
+}
