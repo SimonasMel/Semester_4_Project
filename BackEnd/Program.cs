@@ -19,9 +19,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ↓ FIX 0: Add Entity Framework Core with SQLite
+// ↓ FIX 0: Add Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<CarDbContext>(options =>
-    options.UseSqlite("Data Source=cars.db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ↓ FIX 1: Register the repository as Scoped (not Singleton) to work with Scoped DbContext
 builder.Services.AddScoped<ICarRepository, CarRepository>();
