@@ -374,5 +374,130 @@ namespace FrontEnd.Services
         {
             return cars.OrderByDescending(ScoreCar).ToList();
         }
+
+        // ── Mutual Matches ────────────────────────────────────
+        private List<MutualMatch> _mutualMatches = new();
+
+        private static string GetMutualMatchesStorageKey(string userKey) => $"mutual-matches:{userKey}";
+
+        /// <summary>
+        /// Called when current user likes another user's car.
+        /// Checks if the other user has also liked any of the current user's cars.
+        /// </summary>
+        public async Task<MutualMatch?> LikeCarAsync(string carId, string carOwnerId)
+        {
+            try
+            {
+                ApplyAuthHeader();
+                var response = await _http.PostAsJsonAsync($"api/cars/{carId}/like", new { ownerId = carOwnerId });
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var mutualMatch = await response.Content.ReadFromJsonAsync<MutualMatch>();
+                    if (mutualMatch != null)
+                    {
+                        _mutualMatches.Add(mutualMatch);
+                        await PersistMutualMatchesAsync();
+                        OnChange?.Invoke();
+                        return mutualMatch;
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error liking car {CarId}", carId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves all mutual matches for the current user.
+        /// </summary>
+        public async Task<List<MutualMatch>> GetMutualMatchesAsync()
+        {
+            try
+            {
+                await EnsureUserDataLoadedAsync();
+                ApplyAuthHeader();
+                var result = await _http.GetFromJsonAsync<List<MutualMatch>>("api/matches/mutual");
+                if (result != null)
+                {
+                    _mutualMatches = result;
+                    await PersistMutualMatchesAsync();
+                }
+                return _mutualMatches;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting mutual matches");
+                return _mutualMatches;
+            }
+        }
+
+        /// <summary>
+        /// Removes a mutual match (user can "unmatch" from someone).
+        /// </summary>
+        public async Task<bool> RemoveMutualMatchAsync(string matchId)
+        {
+            try
+            {
+                ApplyAuthHeader();
+                var response = await _http.DeleteAsync($"api/matches/mutual/{matchId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _mutualMatches.RemoveAll(m => m.Id == matchId);
+                    await PersistMutualMatchesAsync();
+                    OnChange?.Invoke();
+                }
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing mutual match {MatchId}", matchId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Loads mutual matches from browser storage and API.
+        /// </summary>
+        private async Task LoadMutualMatchesAsync()
+        {
+            try
+            {
+                var userKey = GetUserKey();
+                var matchesRaw = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", GetMutualMatchesStorageKey(userKey));
+                if (!string.IsNullOrWhiteSpace(matchesRaw))
+                {
+                    var matches = JsonSerializer.Deserialize<List<MutualMatch>>(matchesRaw) ?? new List<MutualMatch>();
+                    _mutualMatches = matches.Where(m => m.IsActive).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading mutual matches from browser storage");
+            }
+        }
+
+        private async Task PersistMutualMatchesAsync()
+        {
+            try
+            {
+                var userKey = _loadedUserKey ?? GetUserKey();
+                var payload = JsonSerializer.Serialize(_mutualMatches);
+                await _jsRuntime.InvokeVoidAsync("localStorage.setItem", GetMutualMatchesStorageKey(userKey), payload);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving mutual matches to browser storage");
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of mutual matches from memory.
+        /// </summary>
+        public List<MutualMatch> GetMutualMatches() => _mutualMatches;
     }
 }
