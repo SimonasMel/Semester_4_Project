@@ -34,9 +34,14 @@ namespace FrontEnd.Services
 
         private void ApplyAuthHeader()
         {
-            _http.DefaultRequestHeaders.Authorization = _tokenStore.IsAuthenticated && !string.IsNullOrWhiteSpace(_tokenStore.Token)
-                ? new AuthenticationHeaderValue("Bearer", _tokenStore.Token)
-                : null;
+            if (_tokenStore.IsAuthenticated && !string.IsNullOrWhiteSpace(_tokenStore.Token))
+            {
+                _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.Token);
+            }
+            else
+            {
+                _http.DefaultRequestHeaders.Authorization = null;
+            }
         }
 
         private string GetUserKey() =>
@@ -132,10 +137,15 @@ namespace FrontEnd.Services
                 var result = await _http.GetFromJsonAsync<List<Car>>("api/cars");
                 return result ?? new List<Car>();
             }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                _logger.LogWarning("Unauthorized when fetching cars. User may not be authenticated yet.");
+                return new List<Car>();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting cars");
-                throw;
+                return new List<Car>();
             }
         }
 
@@ -148,10 +158,15 @@ namespace FrontEnd.Services
                 var result = await _http.GetFromJsonAsync<List<Car>>("api/cars/my");
                 return result ?? new List<Car>();
             }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                _logger.LogWarning("Unauthorized when fetching user cars.");
+                return new List<Car>();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting user cars");
-                throw;
+                return new List<Car>();
             }
         }
 
@@ -163,10 +178,15 @@ namespace FrontEnd.Services
                 ApplyAuthHeader();
                 return await _http.GetFromJsonAsync<Car>($"api/cars/{id}");
             }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                _logger.LogWarning("Unauthorized when fetching car {CarId}.", id);
+                return null;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting car {CarId}", id);
-                throw;
+                return null;
             }
         }
 
@@ -420,11 +440,19 @@ namespace FrontEnd.Services
             {
                 await EnsureUserDataLoadedAsync();
                 ApplyAuthHeader();
-                var result = await _http.GetFromJsonAsync<List<MutualMatch>>("api/matches/mutual");
-                if (result != null)
+                try
                 {
-                    _mutualMatches = result;
-                    await PersistMutualMatchesAsync();
+                    var result = await _http.GetFromJsonAsync<List<MutualMatch>>("api/matches/mutual");
+                    if (result != null)
+                    {
+                        _mutualMatches = result;
+                        await PersistMutualMatchesAsync();
+                    }
+                }
+                catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning("Mutual matches endpoint not found. This feature may not be implemented on the backend yet.");
+                    // Return cached mutual matches if endpoint doesn't exist
                 }
                 return _mutualMatches;
             }
