@@ -11,7 +11,12 @@ public sealed class FileErrorLoggerProvider : ILoggerProvider
     public FileErrorLoggerProvider(string filePath)
     {
         _filePath = Path.GetFullPath(filePath);
-        Directory.CreateDirectory(Path.GetDirectoryName(_filePath)!);
+
+        var directory = Path.GetDirectoryName(_filePath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
     }
 
     public ILogger CreateLogger(string categoryName) => new FileErrorLogger(categoryName, _filePath, _lock);
@@ -31,7 +36,7 @@ public sealed class FileErrorLoggerProvider : ILoggerProvider
             _lock = @lock;
         }
 
-        public IDisposable BeginScope<TState>(TState state) => NullScope.Instance;
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
         public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Error;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
@@ -53,9 +58,16 @@ public sealed class FileErrorLoggerProvider : ILoggerProvider
 
             sb.AppendLine();
 
-            lock (_lock)
+            try
             {
-                File.AppendAllText(_filePath, sb.ToString());
+                lock (_lock)
+                {
+                    File.AppendAllText(_filePath, sb.ToString());
+                }
+            }
+            catch
+            {
+                // Never throw from logger path.
             }
         }
 

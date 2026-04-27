@@ -408,13 +408,19 @@ namespace FrontEnd.Services
         {
             try
             {
+                await EnsureUserDataLoadedAsync();
                 ApplyAuthHeader();
                 var response = await _http.PostAsJsonAsync($"api/cars/{carId}/like", new { ownerId = carOwnerId });
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+                {
+                    return null;
+                }
 
                 if (response.IsSuccessStatusCode)
                 {
                     var mutualMatch = await response.Content.ReadFromJsonAsync<MutualMatch>();
-                    if (mutualMatch != null)
+                    if (mutualMatch != null && !_mutualMatches.Any(m => m.Id == mutualMatch.Id))
                     {
                         _mutualMatches.Add(mutualMatch);
                         await PersistMutualMatchesAsync();
@@ -445,7 +451,11 @@ namespace FrontEnd.Services
                     var result = await _http.GetFromJsonAsync<List<MutualMatch>>("api/matches/mutual");
                     if (result != null)
                     {
-                        _mutualMatches = result;
+                        _mutualMatches = result
+                            .Where(m => m.IsActive)
+                            .GroupBy(m => m.Id)
+                            .Select(g => g.First())
+                            .ToList();
                         await PersistMutualMatchesAsync();
                     }
                 }

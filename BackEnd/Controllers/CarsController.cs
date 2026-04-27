@@ -1,8 +1,10 @@
 using BackEnd.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using System.Security.Claims;
+using BackEnd.Data;
 
 namespace BackEnd.Controllers
 {
@@ -16,6 +18,11 @@ namespace BackEnd.Controllers
     {
         private readonly ICarRepository _repository;
         private readonly ILogger<CarsController> _logger;
+
+        public sealed class LikeCarRequest
+        {
+            public string? OwnerId { get; set; }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CarsController"/> class.
@@ -334,6 +341,89 @@ namespace BackEnd.Controllers
             {
                 _logger.LogError(ex, "Error uploading images");
                 return StatusCode(500, new { error = "An error occurred while uploading images", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Likes a car and creates a mutual match when both users liked each other's cars.
+        /// </summary>
+        [HttpPost("{carId}/like")]
+        public async Task<ActionResult<MutualMatch>> LikeCar(
+            string carId,
+            [FromBody] LikeCarRequest? request,
+            [FromServices] CarDbContext db)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(carId))
+                    return BadRequest(new { error = "Car ID cannot be empty" });
+
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Unauthorized(new { error = "User not logged in" });
+
+                var car = await _repository.GetByIdAsync(carId);
+                if (car == null)
+                    return NotFound(new { error = $"Car with ID {carId} not found" });
+
+                var carOwnerId = car.UserId;
+                if (string.IsNullOrWhiteSpace(carOwnerId))
+                    return BadRequest(new { error = "Car owner is missing" });
+
+                if (carOwnerId == currentUserId)
+                    return BadRequest(new { error = "You cannot like your own car" });
+
+                var existingLike = await db.CarLikes
+                    .FirstOrDefaultAsync(l => l.LikerUserId == currentUserId && l.LikedCarId == carId);
+
+                if (existingLike == null)
+                {
+                    db.CarLikes.Add(new CarLike
+                    {
+                        LikerUserId = currentUserId,
+                        LikedCarId = carId,
+                        LikedCarOwnerId = carOwnerId,
+                        CreatedAt = DateTime.UtcNow
+                    });
+
+                    await db.SaveChangesAsync();
+                }
+
+                var reverseLike = await db.CarLikes
+                    .Where(l => l.LikerUserId == carOwnerId && l.LikedCarOwnerId == currentUserId)
+                    .OrderByDescending(l => l.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (reverseLike == null)
+                    return NoContent();
+
+                var existingMatch = await db.MutualMatches
+                    .FirstOrDefaultAsync(m => m.IsActive &&
+                        ((m.CurrentUserId == currentUserId && m.MatchedUserId == carOwnerId) ||
+                         (m.CurrentUserId == carOwnerId && m.MatchedUserId == currentUserId)));
+
+                if (existingMatch != null)
+                    return Ok(existingMatch);
+
+                var newMatch = new MutualMatch
+                {
+                    CurrentUserId = currentUserId,
+                    MatchedUserId = carOwnerId,
+                    CurrentUserCarId = reverseLike.LikedCarId,
+                    MatchedUserCarId = carId,
+                    MatchedDate = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                db.MutualMatches.Add(newMatch);
+                await db.SaveChangesAsync();
+
+                return Ok(newMatch);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error liking car {CarId}. Request ownerId: {OwnerId}", carId, request?.OwnerId);
+                return StatusCode(500, new { error = "An error occurred while liking the car", details = ex.Message });
             }
         }
     }

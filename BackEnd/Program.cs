@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddProvider(
-    new FileErrorLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "..", "Logs", "errors.log")));
+    new FileErrorLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "..", "Logs", "backend-errors.log")));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -21,7 +21,13 @@ builder.Services.AddSwaggerGen();
 
 // ↓ FIX 0: Add Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<CarDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsql =>
+        {
+            npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+            npgsql.CommandTimeout(30);
+        }));
 
 // ↓ FIX 1: Register the repository as Scoped (not Singleton) to work with Scoped DbContext
 builder.Services.AddScoped<ICarRepository, CarRepository>();
