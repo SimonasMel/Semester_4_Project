@@ -110,9 +110,27 @@
                 <input @bind="NewCar.Location" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="e.g., Vilnius" required />
             </div>
 
-            <div class="flex flex-col gap-2 md:col-span-2">
+            <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Contact Info (Email) <span class="text-slate-500 dark:text-slate-400 font-normal">(Optional)</span></label>
                 <input @bind="NewCar.ContactInfo" type="email" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="your@email.com" />
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">VIN</label>
+                <input @bind="NewCar.VIN" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="17-character VIN" maxlength="17" required />
+            </div>
+
+            <div class="flex flex-col gap-2 md:col-span-2">
+                @if (NewCar.FuelType == Shared.Models.FuelCategory.Electric)
+                {
+                    <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Energy Consumption (kWh/100km)</label>
+                    <input @bind="NewCar.EnergyConsumptionKWhPer100Km" type="number" step="0.1" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="20.0" />
+                }
+                else
+                {
+                    <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Fuel Consumption (L/100km)</label>
+                    <input @bind="NewCar.FuelConsumptionLitersPer100Km" type="number" step="0.1" class="bg-gray-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-text-dark dark:text-text-light focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200 font-medium" placeholder="8.5" />
+                }
             </div>
 
             <div class="md:col-span-2">
@@ -148,7 +166,7 @@
                 @foreach (var car in AddedCars)
                 {
                     <div class="bg-gray-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                        <img src="@car.PrimaryImagePath" alt="@car.Brand @car.Model" class="w-full h-40 object-cover rounded-lg mb-3" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ccc%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2214%22 fill=%22%23999%22%3ENo Image%3C/text%3E%3C/svg%3E'" />
+                        <img src="@ResolveImageUrl(car.PrimaryImagePath)" alt="@car.Brand @car.Model" class="w-full h-40 object-cover rounded-lg mb-3" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ccc%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2214%22 fill=%22%23999%22%3ENo Image%3C/text%3E%3C/svg%3E'" />
                         <h4 class="font-bold text-text-dark dark:text-text-light">@car.Brand @car.Model</h4>
                         <p class="text-sm text-text-muted dark:text-gray-400">@car.ProductionYear • €@car.Price.ToString("N0")</p>
                         <p class="text-xs text-text-muted dark:text-gray-500 mt-2">@car.MileageKm km • @GetFuelType(car.FuelType)</p>
@@ -238,14 +256,11 @@
             NewCar.Features ??= new List<string>();
             NewCar.AdditionalImagePaths ??= new List<string>();
 
-            // Optional fuel/energy consumption defaults
-            if (NewCar.FuelType == Shared.Models.FuelCategory.Electric)
+            // Validate VIN length if provided
+            if (!string.IsNullOrEmpty(NewCar.VIN) && NewCar.VIN.Length != 17)
             {
-                NewCar.EnergyConsumptionKWhPer100Km ??= 20.0;
-            }
-            else
-            {
-                NewCar.FuelConsumptionLitersPer100Km ??= 8.5;
+                ErrorMessage = "VIN must be exactly 17 characters";
+                return;
             }
 
             IsSubmitting = true;
@@ -383,6 +398,17 @@
         Shared.Models.FuelCategory.PlugInHybrid => "⚡ Plug-in Hybrid",
         _ => "Unknown"
     };
+
+    private string ResolveImageUrl(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23333' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='10' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+        
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return path;
+        
+        // Use the HttpClient injected from CarService or inject HttpClient directly
+        var baseUrl = Garage.GetBaseUrl().TrimEnd('/');
+        return $"{baseUrl}/{path.TrimStart('/')}";
+    }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = null!;

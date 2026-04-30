@@ -34,10 +34,44 @@
             </a>
         </div>
 
-        <div class="bg-white dark:bg-surface-dark rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <img src="@car.PrimaryImagePath"
-                 alt="@($"{car.Brand} {car.Model}")"
-                 class="w-full h-[420px] object-cover" />
+        <div class="bg-white dark:bg-surface-dark rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden relative group">
+            <div class="relative h-[420px] bg-slate-900 flex items-center justify-center overflow-hidden">
+                @if (allImages.Any())
+                {
+                    <img src="@ResolveImageUrl(allImages[currentImageIndex])"
+                         alt="@($"{car.Brand} {car.Model}")"
+                         class="w-full h-full object-cover transition-all duration-500" />
+                    
+                    @if (allImages.Count > 1)
+                    {
+                        <!-- Navigation Arrows -->
+                        <button @onclick="PrevImage" class="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors opacity-0 group-hover:opacity-100 focus:outline-none">
+                            <span class="bi bi-chevron-left text-2xl"></span>
+                        </button>
+                        <button @onclick="NextImage" class="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors opacity-0 group-hover:opacity-100 focus:outline-none">
+                            <span class="bi bi-chevron-right text-2xl"></span>
+                        </button>
+
+                        <!-- Dots Indicator -->
+                        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                            @for (int i = 0; i < allImages.Count; i++)
+                            {
+                                int index = i;
+                                <button @onclick="() => currentImageIndex = index" 
+                                        class="w-2.5 h-2.5 rounded-full transition-all @(currentImageIndex == i ? "bg-primary w-6" : "bg-white/50 hover:bg-white")">
+                                </button>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="flex flex-col items-center text-gray-500">
+                        <span class="bi bi-image text-6xl mb-4"></span>
+                        <p>No images available</p>
+                    </div>
+                }
+            </div>
 
             <div class="p-8">
                 <div class="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-8">
@@ -99,16 +133,20 @@
                     </div>
                 }
 
-                @if (car.AdditionalImagePaths.Any())
+                @if (allImages.Count > 1)
                 {
                     <div class="mb-10">
-                        <h2 class="text-xl font-bold mb-5 text-text-dark dark:text-text-light">More Photos</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach (var image in car.AdditionalImagePaths)
+                        <h2 class="text-xl font-bold mb-5 text-text-dark dark:text-text-light">All Photos</h2>
+                        <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                            @for (int i = 0; i < allImages.Count; i++)
                             {
-                                <img src="@image"
-                                     alt="@($"{car.Brand} {car.Model} photo")"
-                                     class="w-full h-[220px] object-cover rounded-xl shadow-sm border border-slate-200 dark:border-slate-800" />
+                                int index = i;
+                                <div @onclick="() => currentImageIndex = index" 
+                                     class="flex-shrink-0 cursor-pointer rounded-xl overflow-hidden border-2 transition-all @(currentImageIndex == i ? "border-primary scale-105 shadow-lg" : "border-transparent opacity-70 hover:opacity-100 hover:scale-105")">
+                                    <img src="@ResolveImageUrl(allImages[i])"
+                                         class="w-32 h-24 object-cover" 
+                                         alt="Thumbnail" />
+                                </div>
                             }
                         </div>
                     </div>
@@ -135,10 +173,13 @@
 
     private Car? car;
     private bool isLoading = true;
+    private List<string> allImages = new();
+    private int currentImageIndex = 0;
 
     protected override async Task OnParametersSetAsync()
     {
         isLoading = true;
+        currentImageIndex = 0;
 
         try
         {
@@ -162,6 +203,13 @@
                         c.ProductionYear == ProductionYear);
                 }
             }
+
+            if (car != null)
+            {
+                allImages.Clear();
+                if (!string.IsNullOrEmpty(car.PrimaryImagePath)) allImages.Add(car.PrimaryImagePath);
+                if (car.AdditionalImagePaths != null) allImages.AddRange(car.AdditionalImagePaths);
+            }
         }
         catch (Exception ex)
         {
@@ -172,6 +220,29 @@
         {
             isLoading = false;
         }
+    }
+
+    private void NextImage()
+    {
+        if (allImages.Count == 0) return;
+        currentImageIndex = (currentImageIndex + 1) % allImages.Count;
+    }
+
+    private void PrevImage()
+    {
+        if (allImages.Count == 0) return;
+        currentImageIndex = (currentImageIndex - 1 + allImages.Count) % allImages.Count;
+    }
+
+    private string ResolveImageUrl(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23333' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='10' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+        
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return path;
+        
+        // Use the centralized base URL from CarService
+        var baseUrl = CarService.GetBaseUrl().TrimEnd('/');
+        return $"{baseUrl}/{path.TrimStart('/')}";
     }
 
     private static string GetConsumption(Car car)
@@ -188,4 +259,4 @@
 
         return "N/A";
     }
-}}
+}

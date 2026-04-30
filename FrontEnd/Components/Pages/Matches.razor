@@ -26,7 +26,7 @@
             {
                 <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30">
 
-                    <img src="@car.PrimaryImagePath" alt="Car photo" class="w-20 h-20 object-cover rounded-lg mr-5 shadow-sm" />
+                    <img src="@ResolveImageUrl(car.PrimaryImagePath)" alt="Car photo" class="w-20 h-20 object-cover rounded-lg mr-5 shadow-sm" />
 
                     <div class="flex-grow">
                         <h4 class="text-lg font-bold m-0 text-text-dark dark:text-text-light">@car.Brand @car.Model</h4>
@@ -60,6 +60,16 @@
 </div>
 
 @code {
+    private string ResolveImageUrl(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23333' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='10' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+        
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return path;
+        
+        var baseUrl = Garage.GetBaseUrl().TrimEnd('/');
+        return $"{baseUrl}/{path.TrimStart('/')}";
+    }
+
     private static string GetDetailsUrl(Shared.Models.Car car) =>
     $"/cars/{Uri.EscapeDataString(car.Brand)}/{Uri.EscapeDataString(car.Model)}/{car.ProductionYear}";
-     }
+}

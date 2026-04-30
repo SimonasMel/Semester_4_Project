@@ -28,6 +28,8 @@ namespace FrontEnd.Services
             _logger = logger;
         }
 
+        public string GetBaseUrl() => _http.BaseAddress?.ToString() ?? string.Empty;
+
         public bool IsSwiped(string carId) => SwipedCarIds.Contains(carId);
 
         private bool MarkSwiped(Car car) => SwipedCarIds.Add(car.Id);

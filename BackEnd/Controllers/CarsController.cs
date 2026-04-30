@@ -328,9 +328,8 @@ namespace BackEnd.Controllers
                             await file.CopyToAsync(stream);
                         }
 
-                        // Use a URL path accessible by the frontend
-                        var backendUrl = $"{Request.Scheme}://{Request.Host}";
-                        var fileUrl = $"{backendUrl}/images/{uniqueFileName}";
+                        // Return a relative path instead of an absolute URL to ensure portability
+                        var fileUrl = $"images/{uniqueFileName}";
                         uploadedUrls.Add(fileUrl);
                     }
                 }
