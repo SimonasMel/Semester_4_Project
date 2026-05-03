@@ -1,4 +1,0 @@
-﻿C:\Users\melio\Desktop\Git_KTU\Projektas\Semester_4_Project\Shared\Car.cs
-C:\Users\melio\Desktop\Git_KTU\Projektas\Semester_4_Project\Shared\Logging\FileErrorLogger.cs
-C:\Users\melio\Desktop\Git_KTU\Projektas\Semester_4_Project\Shared\Models\Car.cs
-C:\Users\melio\Desktop\Git_KTU\Projektas\Semester_4_Project\Shared\Models\UserPreferences.cs
