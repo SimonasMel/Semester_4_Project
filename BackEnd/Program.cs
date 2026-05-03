@@ -41,6 +41,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = true;
 })
+.AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<CarDbContext>()
 .AddSignInManager()
 .AddDefaultTokenProviders();
@@ -82,6 +83,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+
+
 // ↓ Security Headers Middleware
 app.Use(async (context, next) =>
 {
@@ -111,9 +114,18 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<CarDbContext>();
     try
     {
-        // Apply any pending migrations
         dbContext.Database.Migrate();
         logger.LogInformation("Database migrations applied successfully");
+
+        // --- Rolių seed'as ---
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        foreach (var role in new[] { "Admin", "User" })
+        {
+            if (!await roleManager.RoleExistsAsync(role))
+                await roleManager.CreateAsync(new IdentityRole(role));
+        }
+        logger.LogInformation("Roles seeded successfully");
+        // --- ---
     }
     catch (Exception ex)
     {

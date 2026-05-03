@@ -1,7 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http.Headers;
 using FrontEnd.Contracts.Auth;
 using Microsoft.JSInterop;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Headers;
+using System.Security.Claims;
 
 namespace FrontEnd.Services
 {
@@ -123,6 +124,19 @@ namespace FrontEnd.Services
             {
                 _logger.LogError(ex, "Error clearing auth session");
             }
+        }
+        public bool IsAdmin()
+        {
+            var token = _tokenStore.Token;
+            if (token == null) return false;
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
+
+            return jwt.Claims
+                .Any(c => c.Type == ClaimTypes.Role && c.Value == "Admin");
+            // arba jei claim type yra string "role":
+            // .Any(c => c.Type == "role" && c.Value == "Admin")
         }
 
         public async Task<(bool Success, string? Email)> GetCurrentUserAsync()

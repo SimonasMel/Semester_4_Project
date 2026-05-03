@@ -62,7 +62,11 @@ namespace BackEnd.Controllers
                     return BadRequest(new { error = "Registration failed", details = errors });
                 }
 
-                var authResponse = GenerateToken(user);
+                var adminEmail = _configuration["AdminSettings:AdminEmail"];
+                var role = user.Email == adminEmail ? "Admin" : "User";
+                await _userManager.AddToRoleAsync(user, role);
+
+                var authResponse = await GenerateTokenAsync(user);
                 return Ok(authResponse);
             }
             catch (Exception ex)
@@ -95,7 +99,7 @@ namespace BackEnd.Controllers
                     return Unauthorized(new { error = "Invalid email or password." });
                 }
 
-                var authResponse = GenerateToken(user);
+                var authResponse = await GenerateTokenAsync(user);
                 return Ok(authResponse);
             }
             catch (Exception ex)
@@ -131,46 +135,53 @@ namespace BackEnd.Controllers
             });
         }
 
-        private AuthResponse GenerateToken(ApplicationUser user)
-        {
-            var key = _configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("JWT signing key is missing.");
-            var issuer = _configuration["Jwt:Issuer"]
-                ?? throw new InvalidOperationException("JWT issuer is missing.");
-            var audience = _configuration["Jwt:Audience"]
-                ?? throw new InvalidOperationException("JWT audience is missing.");
-            var expireMinutes = int.TryParse(_configuration["Jwt:ExpireMinutes"], out var parsedMinutes)
-                ? parsedMinutes
-                : 120;
+       // Pakeisk private AuthResponse GenerateToken(ApplicationUser user)
+private async Task<AuthResponse> GenerateTokenAsync(ApplicationUser user)
+{
+    var key = _configuration["Jwt:Key"]
+        ?? throw new InvalidOperationException("JWT signing key is missing.");
+    var issuer = _configuration["Jwt:Issuer"]
+        ?? throw new InvalidOperationException("JWT issuer is missing.");
+    var audience = _configuration["Jwt:Audience"]
+        ?? throw new InvalidOperationException("JWT audience is missing.");
+    var expireMinutes = int.TryParse(_configuration["Jwt:ExpireMinutes"], out var parsedMinutes)
+        ? parsedMinutes
+        : 120;
 
-            var claims = new List<Claim>
-            {
-                new(JwtRegisteredClaimNames.Sub, user.Id),
-                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-                new(ClaimTypes.NameIdentifier, user.Id),
-                new(ClaimTypes.Name, user.UserName ?? user.Email ?? string.Empty)
-            };
+    var claims = new List<Claim>
+    {
+        new(JwtRegisteredClaimNames.Sub, user.Id),
+        new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+        new(ClaimTypes.NameIdentifier, user.Id),
+        new(ClaimTypes.Name, user.UserName ?? user.Email ?? string.Empty)
+    };
 
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-            var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
-            var expiresAt = DateTime.UtcNow.AddMinutes(expireMinutes);
+    // --- Rolių pridėjimas ---
+    var roles = await _userManager.GetRolesAsync(user);
+    foreach (var role in roles)
+        claims.Add(new Claim(ClaimTypes.Role, role));
+    // --- ---
 
-            var jwtToken = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                claims: claims,
-                expires: expiresAt,
-                signingCredentials: credentials);
+    var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+    var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+    var expiresAt = DateTime.UtcNow.AddMinutes(expireMinutes);
 
-            var token = new JwtSecurityTokenHandler().WriteToken(jwtToken);
+    var jwtToken = new JwtSecurityToken(
+        issuer: issuer,
+        audience: audience,
+        claims: claims,
+        expires: expiresAt,
+        signingCredentials: credentials);
 
-            return new AuthResponse
-            {
-                Token = token,
-                ExpiresAtUtc = expiresAt,
-                Email = user.Email ?? string.Empty,
-                UserId = user.Id
-            };
-        }
+    var token = new JwtSecurityTokenHandler().WriteToken(jwtToken);
+
+    return new AuthResponse
+    {
+        Token = token,
+        ExpiresAtUtc = expiresAt,
+        Email = user.Email ?? string.Empty,
+        UserId = user.Id
+    };
+}
     }
 }

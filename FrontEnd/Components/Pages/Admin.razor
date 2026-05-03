@@ -1,0 +1,284 @@
+@page "/admin"
+@using Shared.Models
+@inject HttpClient Http
+@inject FrontEnd.Services.AuthService Auth
+
+<PageTitle>Admin Panel</PageTitle>
+
+@if (!Auth.IsAdmin())
+{
+    <div class="flex items-center justify-center h-screen">
+        <p class="text-red-500 font-bold text-xl">Access denied.</p>
+    </div>
+    return;
+}
+
+<div class="max-w-6xl mx-auto p-8">
+
+    <h1 class="text-3xl font-bold mb-2 text-primary text-center">
+        Admin Panel
+    </h1>
+
+    <!-- Tabs -->
+    <div class="flex gap-3 mb-8 justify-center">
+        <button class="px-5 py-2 rounded-xl font-bold text-sm transition-all @(activeTab == "cars" ? "bg-primary text-[#022c22]" : "bg-white dark:bg-surface-dark text-slate-500 border border-slate-200 dark:border-slate-700")"
+                @onclick='() => activeTab = "cars"'>
+            Cars
+        </button>
+        <button class="px-5 py-2 rounded-xl font-bold text-sm transition-all @(activeTab == "users" ? "bg-primary text-[#022c22]" : "bg-white dark:bg-surface-dark text-slate-500 border border-slate-200 dark:border-slate-700")"
+                @onclick='() => activeTab = "users"'>
+            Users
+        </button>
+    </div>
+
+    <!-- CARS -->
+    @if (activeTab == "cars")
+    {
+        <div class="bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft p-8">
+
+            <h2 class="text-lg font-bold text-text-dark dark:text-text-light mb-4">All Cars</h2>
+
+            @if (carsLoading)
+            {
+                <p class="text-slate-400">Loading...</p>
+            }
+            else if (cars is null || !cars.Any())
+            {
+                <p class="text-slate-400">No cars found.</p>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                                <th class="py-3 pr-4">Brand</th>
+                                <th class="py-3 pr-4">Model</th>
+                                <th class="py-3 pr-4">Year</th>
+                                <th class="py-3 pr-4">Price</th>
+                                <th class="py-3 pr-4">Location</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var car in cars)
+                            {
+                                <tr class="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                                    <td class="py-3 pr-4 font-medium text-text-dark dark:text-text-light">@car.Brand</td>
+                                    <td class="py-3 pr-4 text-slate-500">@car.Model</td>
+                                    <td class="py-3 pr-4 text-slate-500">@car.ProductionYear</td>
+                                    <td class="py-3 pr-4 text-slate-500">€@car.Price.ToString("N0")</td>
+                                    <td class="py-3 pr-4 text-slate-500">@car.Location</td>
+                                    <td>
+                                        <button class="text-red-500 hover:text-red-600 font-semibold text-sm"
+                                                @onclick="() => ConfirmDeleteCar(car)">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- USERS -->
+    @if (activeTab == "users")
+    {
+        <div class="bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft p-8">
+
+            <h2 class="text-lg font-bold text-text-dark dark:text-text-light mb-4">All Users</h2>
+
+            @if (usersLoading)
+            {
+                <p class="text-slate-400">Loading...</p>
+            }
+            else if (users is null || !users.Any())
+            {
+                <p class="text-slate-400">No users found.</p>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                                <th class="py-3 pr-4">Email</th>
+                                <th class="py-3 pr-4">Username</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in users)
+                            {
+                                <tr class="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                                    <td class="py-3 pr-4 font-medium text-text-dark dark:text-text-light">@user.Email</td>
+                                    <td class="py-3 pr-4 text-slate-500">@user.UserName</td>
+                                    <td>
+                                        <button class="text-red-500 hover:text-red-600 font-semibold text-sm"
+                                                @onclick="() => ConfirmDeleteUser(user)">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+       
+    }
+</div>
+<!-- PATVIRTINIMO MODALAS -->
+@if (showConfirm)
+{
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-6">
+        
+        @* Pagrindinis konteineris *@
+        <div class="shadow-2xl border border-slate-700 flex flex-col items-center text-center"
+             style="border-radius: 45px !important; width: 320px; padding: 40px; background-color: #111827 !important; overflow: hidden;">
+            
+            <!-- Apvali ikona: raudonas fonas, tamsi šiukšliadėžė -->
+            <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-red-500/20">
+                <svg class="w-8 h-8 text-[#111827]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+
+            <h3 class="text-xl font-bold mb-2 text-white italic">Delete?</h3>
+            
+            <p class="text-sm text-slate-400 mb-10 font-medium leading-relaxed px-2">
+                @confirmMessage
+            </p>
+            
+            <div class="flex flex-col gap-3 w-full">
+                <!-- Delete mygtukas: be spalvos, paraudonuoja tik hoverinus -->
+                <!-- DELETE: Raudonas, patamsėjantis hover metu, su aktyvaus paspaudimo efektu -->
+                <button @onclick="ExecuteDelete"
+                        class="w-full py-4 bg-red-500 text-white border-none rounded-2xl cursor-pointer
+                    hover:bg-red-600 transition-all duration-200 active:scale-[0.98]
+                    text-lg font-bold shadow-sm hover:shadow-md hover:shadow-red-500/20">
+                    Delete
+                </button>
+                
+                <!-- Cancel mygtukas: tamsus su rėmeliu (kaip tavo nuotraukoje) -->
+                <button @onclick="() => showConfirm = false"
+                        class="w-full py-4 rounded-2xl text-white font-bold transition-all active:scale-95 border border-slate-600 shadow-sm"
+                        style="background-color: #1f2937 !important;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    private string activeTab = "cars";
+
+    private List<Car>? cars;
+    private bool carsLoading = true;
+
+    private List<AdminUser>? users;
+    private bool usersLoading = true;
+
+    private bool showConfirm = false;
+    private string confirmMessage = string.Empty;
+    private string? errorMessage;
+    private Func<Task>? deleteAction;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCarsAsync();
+        await LoadUsersAsync();
+    }
+
+    private async Task LoadCarsAsync()
+    {
+        carsLoading = true;
+        try
+        {
+            cars = await Http.GetFromJsonAsync<List<Car>>("api/admin/cars");
+        }
+        catch
+        {
+            cars = new List<Car>();
+        }
+        carsLoading = false;
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        usersLoading = true;
+        try
+        {
+            users = await Http.GetFromJsonAsync<List<AdminUser>>("api/admin/users");
+        }
+        catch
+        {
+            users = new List<AdminUser>();
+        }
+        usersLoading = false;
+    }
+
+    private void ConfirmDeleteCar(Car car)
+    {
+        confirmMessage = $"Are you sure you want to delete {car.Brand} {car.Model} ({car.ProductionYear})?";
+        errorMessage = null;
+
+        deleteAction = async () =>
+        {
+            var response = await Http.DeleteAsync($"api/admin/cars/{car.Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                cars?.Remove(car);
+                showConfirm = false;
+            }
+            else
+            {
+                errorMessage = "Failed to delete car.";
+            }
+        };
+
+        showConfirm = true;
+    }
+
+    private void ConfirmDeleteUser(AdminUser user)
+    {
+        confirmMessage = $"Are you sure you want to delete user {user.Email}?";
+        errorMessage = null;
+
+        deleteAction = async () =>
+        {
+            var response = await Http.DeleteAsync($"api/admin/users/{user.Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                users?.Remove(user);
+                showConfirm = false;
+            }
+            else
+            {
+                errorMessage = "Failed to delete user.";
+            }
+        };
+
+        showConfirm = true;
+    }
+
+    private async Task ExecuteDelete()
+    {
+        if (deleteAction != null)
+            await deleteAction();
+
+    }
+
+    private class AdminUser
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+    }
+}

@@ -1,5 +1,6 @@
 @inject CarService Garage
 @inject FrontEnd.Services.ThemeService Theme
+@inject FrontEnd.Services.AuthService Auth   
 @implements IDisposable
 
 <div class="contents">
@@ -15,7 +16,7 @@
 
             <NavLink href="/matches" class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-slate-500 transition-all duration-200 hover:bg-gray-100 hover:text-text-dark [&.active]:bg-primary/10 [&.active]:text-primary [&.active]:font-bold dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-text-light dark:[&.active]:bg-primary/20 dark:[&.active]:text-primary text-[0.95rem] relative">
                 <span class="bi bi-heart text-lg"></span>
-                <span class="link-text">Liked cas</span>
+                <span class="link-text">Liked cars</span>
                 @if (Garage?.MatchedCars?.Count > 0)
                 {
                     <span class="absolute right-3 bg-primary text-[#022c22] rounded-full px-2 py-0.5 text-[0.7rem] font-black">@Garage.MatchedCars.Count</span>
@@ -41,6 +42,13 @@
                 <span class="bi bi-sliders text-lg"></span>
                 <span class="link-text">Preferences</span>
             </NavLink>
+            @if (Auth.IsAdmin())
+            {
+                <NavLink href="/admin" class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-slate-500 transition-all duration-200 hover:bg-gray-100 hover:text-text-dark [&.active]:bg-primary/10 [&.active]:text-primary [&.active]:font-bold dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-text-light dark:[&.active]:bg-primary/20 dark:[&.active]:text-primary text-[0.95rem]">
+                    <span class="bi bi-shield-lock text-lg"></span>
+                    <span class="link-text">Admin</span>
+                </NavLink>
+            }
         </nav>
 
         <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
@@ -92,6 +100,13 @@
             <span class="bi bi-sliders"></span>
             <small>Preferences</small>
         </NavLink>
+        @if (Auth.IsAdmin())
+        {
+            <NavLink href="/admin" class="flex flex-col items-center gap-1 text-gray-500 dark:text-gray-400 text-[0.75rem] no-underline [&.active]:text-primary [&.active]:font-bold">
+                <span class="bi bi-shield-lock"></span>
+                <small>Admin</small>
+            </NavLink>
+        }
     </div>
 
 @code {
