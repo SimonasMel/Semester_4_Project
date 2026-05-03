@@ -62,7 +62,7 @@
 
         if (!result.Success)
         {
-            ErrorMessage = "Registration failed. Try another email or stronger password.";
+            ErrorMessage = result.Error = "Registration failed. Try another email or stronger password.";
             return;
         }
 
