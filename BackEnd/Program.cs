@@ -12,8 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.AddProvider(
-    new FileErrorLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "..", "Logs", "backend-errors.log")));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -100,12 +98,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// ↓ Only enable Swagger in Development
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
 
 // ↓ NEW: Automatically create and migrate the database on startup
 using (var scope = app.Services.CreateScope())
@@ -133,8 +126,12 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// ↓ Only enable Swagger in Development
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // ↓ Apply the CORS policy (must be before UseAuthorization)
 app.UseCors("AllowFrontEnd");
