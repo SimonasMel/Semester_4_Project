@@ -1,4 +1,5 @@
 using BackEnd.Repositories;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ namespace BackEnd.Controllers
     {
         private readonly ICarRepository _repository;
         private readonly ILogger<CarsController> _logger;
+        private readonly HeicImageConverter _imageConverter;
 
         public sealed class LikeCarRequest
         {
@@ -30,10 +32,11 @@ namespace BackEnd.Controllers
         /// Initializes a new instance of the <see cref="CarsController"/> class.
         /// </summary>
         /// <param name="repository">The car repository instance injected via dependency injection.</param>
-        public CarsController(ICarRepository repository, ILogger<CarsController> logger)
+        public CarsController(ICarRepository repository, ILogger<CarsController> logger, HeicImageConverter? imageConverter = null)
         {
             _repository = repository;
             _logger = logger;
+            _imageConverter = imageConverter ?? new HeicImageConverter();
         }
 
         /// <summary>
@@ -329,11 +332,15 @@ namespace BackEnd.Controllers
                     {
                         if (file.Length > 0)
                         {
-                            var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-                            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                            using var stream = new FileStream(filePath, FileMode.Create);
-                            await file.CopyToAsync(stream);
-                            uploadedLocalUrls.Add($"images/{uniqueFileName}");
+                            var (stream, fileName, contentType) = await _imageConverter.PrepareForUploadAsync(file);
+                            using (stream)
+                            {
+                                var uniqueFileName = Guid.NewGuid().ToString() + "_" + fileName;
+                                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                                await using var output = new FileStream(filePath, FileMode.Create);
+                                await stream.CopyToAsync(output);
+                                uploadedLocalUrls.Add($"images/{uniqueFileName}");
+                            }
                         }
                     }
                     return Ok(new { urls = uploadedLocalUrls });
@@ -350,17 +357,20 @@ namespace BackEnd.Controllers
                 {
                     if (file.Length > 0)
                     {
-                        var uniqueFileName = Guid.NewGuid().ToString() +
-                                             Path.GetExtension(file.FileName);
-                        var blobClient = containerClient.GetBlobClient(uniqueFileName);
-
-                        await blobClient.UploadAsync(file.OpenReadStream(), new BlobHttpHeaders
+                        var (stream, fileName, contentType) = await _imageConverter.PrepareForUploadAsync(file);
+                        using (stream)
                         {
-                            ContentType = file.ContentType
-                        });
+                            var uniqueFileName = Guid.NewGuid().ToString() + "_" + fileName;
+                            var blobClient = containerClient.GetBlobClient(uniqueFileName);
 
-                        // Full HTTPS URL — permanent, survives restarts
-                        uploadedUrls.Add(blobClient.Uri.ToString());
+                            await blobClient.UploadAsync(stream, new BlobHttpHeaders
+                            {
+                                ContentType = contentType
+                            });
+
+                            // Full HTTPS URL — permanent, survives restarts
+                            uploadedUrls.Add(blobClient.Uri.ToString());
+                        }
                     }
                 }
 
