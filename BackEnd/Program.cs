@@ -2,6 +2,7 @@ using System.Text;
 using BackEnd.Data;
 using BackEnd.Models;
 using BackEnd.Repositories;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ builder.Logging.AddConsole();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<HeicImageConverter>();
 
 // ↓ FIX 0: Add Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<CarDbContext>(options =>
