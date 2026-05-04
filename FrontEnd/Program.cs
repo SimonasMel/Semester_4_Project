@@ -7,8 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.AddProvider(
-    new FileErrorLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "..", "Logs", "frontend-errors.log")));
 
 // Add services to the container
 builder.Services.AddRazorComponents()
@@ -48,7 +46,13 @@ app.Use(async (context, next) =>
     if (!app.Environment.IsDevelopment())
     {
         context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-        context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'");
+        context.Response.Headers.Add("Content-Security-Policy",
+            "default-src 'self'; " +
+            "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; " +
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+            "font-src 'self' https://cdn.jsdelivr.net; " +
+            "img-src 'self' data: https:; " +
+            "connect-src 'self' wss: https:;");
     }
     await next();
 });
