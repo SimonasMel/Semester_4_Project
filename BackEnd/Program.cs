@@ -2,6 +2,7 @@ using System.Text;
 using BackEnd.Data;
 using BackEnd.Models;
 using BackEnd.Repositories;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,12 +13,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.AddProvider(
-    new FileErrorLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "..", "Logs", "backend-errors.log")));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<HeicImageConverter>();
 
 // ↓ FIX 0: Add Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<CarDbContext>(options =>
@@ -100,12 +100,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// ↓ Only enable Swagger in Development
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
 
 // ↓ NEW: Automatically create and migrate the database on startup
 using (var scope = app.Services.CreateScope())
@@ -133,8 +128,12 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// ↓ Only enable Swagger in Development
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // ↓ Apply the CORS policy (must be before UseAuthorization)
 app.UseCors("AllowFrontEnd");

@@ -1,10 +1,13 @@
 using BackEnd.Repositories;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using System.Security.Claims;
 using BackEnd.Data;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 
 namespace BackEnd.Controllers
 {
@@ -18,6 +21,7 @@ namespace BackEnd.Controllers
     {
         private readonly ICarRepository _repository;
         private readonly ILogger<CarsController> _logger;
+        private readonly HeicImageConverter _imageConverter;
 
         public sealed class LikeCarRequest
         {
@@ -28,10 +32,11 @@ namespace BackEnd.Controllers
         /// Initializes a new instance of the <see cref="CarsController"/> class.
         /// </summary>
         /// <param name="repository">The car repository instance injected via dependency injection.</param>
-        public CarsController(ICarRepository repository, ILogger<CarsController> logger)
+        public CarsController(ICarRepository repository, ILogger<CarsController> logger, HeicImageConverter? imageConverter = null)
         {
             _repository = repository;
             _logger = logger;
+            _imageConverter = imageConverter ?? new HeicImageConverter();
         }
 
         /// <summary>
@@ -302,35 +307,70 @@ namespace BackEnd.Controllers
         /// Uploads images for a car.
         /// </summary>
         [HttpPost("upload")]
-        [AllowAnonymous] // Ideally should be authorized, but just in case for debugging
-        public async Task<IActionResult> UploadImages(IFormFileCollection files)
+        [AllowAnonymous]
+        public async Task<IActionResult> UploadImages(
+    IFormFileCollection files,
+    [FromServices] IConfiguration configuration)
         {
             try
             {
                 if (files == null || files.Count == 0)
                     return BadRequest(new { error = "No files uploaded" });
 
-                var uploadedUrls = new List<string>();
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                var connectionString = configuration["AzureStorage:ConnectionString"];
+                var containerName = configuration["AzureStorage:ContainerName"] ?? "car-images";
 
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
+                // Fall back to local storage if no Azure config (for local development)
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    var uploadedLocalUrls = new List<string>();
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    foreach (var file in files)
+                    {
+                        if (file.Length > 0)
+                        {
+                            var (stream, fileName, contentType) = await _imageConverter.PrepareForUploadAsync(file);
+                            using (stream)
+                            {
+                                var uniqueFileName = Guid.NewGuid().ToString() + "_" + fileName;
+                                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                                await using var output = new FileStream(filePath, FileMode.Create);
+                                await stream.CopyToAsync(output);
+                                uploadedLocalUrls.Add($"images/{uniqueFileName}");
+                            }
+                        }
+                    }
+                    return Ok(new { urls = uploadedLocalUrls });
+                }
+
+                // Azure Blob Storage upload
+                var blobServiceClient = new BlobServiceClient(connectionString);
+                var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+
+                var uploadedUrls = new List<string>();
 
                 foreach (var file in files)
                 {
                     if (file.Length > 0)
                     {
-                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        var (stream, fileName, contentType) = await _imageConverter.PrepareForUploadAsync(file);
+                        using (stream)
                         {
-                            await file.CopyToAsync(stream);
-                        }
+                            var uniqueFileName = Guid.NewGuid().ToString() + "_" + fileName;
+                            var blobClient = containerClient.GetBlobClient(uniqueFileName);
 
-                        // Return a relative path instead of an absolute URL to ensure portability
-                        var fileUrl = $"images/{uniqueFileName}";
-                        uploadedUrls.Add(fileUrl);
+                            await blobClient.UploadAsync(stream, new BlobHttpHeaders
+                            {
+                                ContentType = contentType
+                            });
+
+                            // Full HTTPS URL — permanent, survives restarts
+                            uploadedUrls.Add(blobClient.Uri.ToString());
+                        }
                     }
                 }
 
