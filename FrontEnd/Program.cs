@@ -3,6 +3,7 @@ using FrontEnd.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Shared.Logging;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
@@ -33,6 +34,9 @@ builder.Services.AddScoped(sp =>
 // App services
 builder.Services.AddScoped<CarService>();
 builder.Services.AddScoped<ThemeService>();
+
+builder.Services.AddScoped<ChatService>();
+
 
 var app = builder.Build();
 
