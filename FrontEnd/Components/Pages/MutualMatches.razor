@@ -5,14 +5,6 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject CarService Garage
 @inject NavigationManager Nav
-@implements IDisposable
-
-<!-- Chat panel rendered at page level so it overlays everything -->
-<ChatPanel MatchId="@_activeChatMatchId"
-           MatchedCarName="@_activeChatCarName"
-           MatchedCarImage="@_activeChatCarImage"
-           IsOpen="@_isChatOpen"
-           OnClose="CloseChat" />
 
 <div class="max-w-4xl mx-auto p-6">
     <h2 class="text-3xl font-bold mb-8 text-primary">💕 Mutual Matches</h2>
@@ -67,15 +59,9 @@
                             </a>
                         }
 
-                        <!-- CHANGED: Message button now opens the chat panel -->
-                        <button class="relative bg-primary-blue text-white border-none py-2 px-5 rounded-full cursor-pointer transition-all duration-200 hover:bg-blue-600 shadow-sm hover:shadow-md text-sm font-bold active:scale-[0.98]"
-                                @onclick="() => OpenChat(match, car)">
-                            Message
-                        </button>
-
                         <button class="bg-red-500 text-white border-none py-2 px-5 rounded-full cursor-pointer hover:bg-red-600 transition-all duration-200 active:scale-[0.98] text-sm font-bold shadow-sm hover:shadow-md"
                                 @onclick="() => UnmatchAsync(match.Id)">
-                            Unmatch
+                            💔 Unmatch
                         </button>
                     </div>
                 </div>
@@ -88,12 +74,6 @@
     private readonly Dictionary<string, Car> matchCars = new();
     private bool isLoading;
     private string? currentUserId;
-
-    // Chat state
-    private bool _isChatOpen = false;
-    private string? _activeChatMatchId;
-    private string? _activeChatCarName;
-    private string? _activeChatCarImage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,10 +99,14 @@
             Car? matchedUserCar = null;
 
             if (!string.IsNullOrWhiteSpace(match.CurrentUserCarId))
+            {
                 currentUserCar = await Garage.GetCarByIdAsync(match.CurrentUserCarId);
+            }
 
             if (!string.IsNullOrWhiteSpace(match.MatchedUserCarId))
+            {
                 matchedUserCar = await Garage.GetCarByIdAsync(match.MatchedUserCarId);
+            }
 
             Car? displayCar = null;
 
@@ -133,40 +117,22 @@
                     : null;
 
                 if (displayCar is null && matchedUserCar is not null && matchedUserCar.UserId != currentUserId)
+                {
                     displayCar = matchedUserCar;
+                }
             }
 
             displayCar ??= matchedUserCar ?? currentUserCar;
 
             if (displayCar is not null)
+            {
                 matchCars[match.Id] = displayCar;
+            }
         }
-    }
-
-    // ADDED: Open chat for a specific match
-    private void OpenChat(MutualMatch match, Car? car)
-    {
-        _activeChatMatchId = match.Id;
-        _activeChatCarName = car is not null ? $"{car.Brand} {car.Model}" : "Matched Car";
-        _activeChatCarImage = car?.PrimaryImagePath;
-        _isChatOpen = true;
-        StateHasChanged();
-    }
-
-    // ADDED: Close the chat panel
-    private void CloseChat()
-    {
-        _isChatOpen = false;
-        _activeChatMatchId = null;
-        StateHasChanged();
     }
 
     private async Task UnmatchAsync(string matchId)
     {
-        // Close chat if it's open for this match
-        if (_activeChatMatchId == matchId)
-            CloseChat();
-
         if (await Garage.RemoveMutualMatchAsync(matchId))
         {
             matchCars.Remove(matchId);

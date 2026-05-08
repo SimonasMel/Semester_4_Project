@@ -70,7 +70,7 @@
 
         <NavLink href="/matches" class="flex flex-col items-center gap-1 text-gray-500 dark:text-gray-400 text-[0.75rem] no-underline [&.active]:text-primary [&.active]:font-bold relative">
             <span class="bi bi-heart"></span>
-            <small>Liked cars</small>
+            <small>Matches</small>
             @if (Garage?.MatchedCars?.Count > 0)
             {
                 <span class="absolute -top-1 -right-1 bg-primary text-[#022c22] rounded-full w-4 h-4 flex items-center justify-center text-[0.6rem] font-bold">@Garage.MatchedCars.Count</span>
@@ -79,7 +79,7 @@
 
         <NavLink href="/mutual-matches" class="flex flex-col items-center gap-1 text-gray-500 dark:text-gray-400 text-[0.75rem] no-underline [&.active]:text-primary [&.active]:font-bold relative">
             <span class="bi bi-heart-fill"></span>
-            <small>Matches</small>
+            <small>Mutual</small>
             @if (Garage?.GetMutualMatches()?.Count > 0)
             {
                 <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[0.6rem] font-bold">@Garage.GetMutualMatches().Count</span>

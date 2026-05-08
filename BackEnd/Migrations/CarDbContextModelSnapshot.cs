@@ -331,41 +331,6 @@ namespace BackEnd.Migrations
                     b.ToTable("CarLikes");
                 });
 
-            modelBuilder.Entity("Shared.Models.ChatMessage", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<bool>("IsRead")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("MatchId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MatchId");
-
-                    b.HasIndex("MatchId", "SentAt");
-
-                    b.ToTable("ChatMessages");
-                });
-
             modelBuilder.Entity("Shared.Models.MutualMatch", b =>
                 {
                     b.Property<string>("Id")

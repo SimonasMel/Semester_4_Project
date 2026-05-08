@@ -13,8 +13,6 @@ namespace BackEnd.Data
         public DbSet<UserPreferences> UserPreferences { get; set; }
         public DbSet<CarLike> CarLikes { get; set; }
         public DbSet<MutualMatch> MutualMatches { get; set; }
-        // ADDED: Chat messages table
-        public DbSet<ChatMessage> ChatMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,7 +33,7 @@ namespace BackEnd.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.UserId).IsRequired();
-                entity.HasIndex(e => e.UserId).IsUnique();
+                entity.HasIndex(e => e.UserId).IsUnique(); // one preferences row per user
             });
 
             modelBuilder.Entity<CarLike>(entity =>
@@ -56,20 +54,6 @@ namespace BackEnd.Data
                 entity.Property(e => e.MatchedUserCarId).IsRequired();
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.HasIndex(e => new { e.CurrentUserId, e.MatchedUserId, e.CurrentUserCarId, e.MatchedUserCarId }).IsUnique();
-            });
-
-            // ADDED: ChatMessage configuration
-            modelBuilder.Entity<ChatMessage>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.MatchId).IsRequired();
-                entity.Property(e => e.SenderId).IsRequired();
-                entity.Property(e => e.Content).IsRequired().HasMaxLength(2000);
-                entity.Property(e => e.SentAt).IsRequired();
-                entity.Property(e => e.IsRead).HasDefaultValue(false);
-                // Index for fast loading of messages by match
-                entity.HasIndex(e => e.MatchId);
-                entity.HasIndex(e => new { e.MatchId, e.SentAt });
             });
         }
     }
