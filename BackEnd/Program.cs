@@ -1,8 +1,8 @@
 using System.Text;
 using BackEnd.Data;
+using BackEnd.Hubs;
 using BackEnd.Models;
 using BackEnd.Repositories;
-using BackEnd.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,9 +17,7 @@ builder.Logging.AddConsole();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<HeicImageConverter>();
 
-// ↓ FIX 0: Add Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<CarDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -29,7 +27,6 @@ builder.Services.AddDbContext<CarDbContext>(options =>
             npgsql.CommandTimeout(30);
         }));
 
-// ↓ FIX 1: Register the repository as Scoped (not Singleton) to work with Scoped DbContext
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -64,11 +61,27 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.Zero
         };
+
+        // ADDED: Allow JWT via query string for SignalR connections
+        // SignalR cannot send headers during WebSocket upgrade, so the token
+        // is sent as ?access_token= query parameter instead
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
 
-// Add CORS with environment-specific configuration
 builder.Services.AddCors(options =>
 {
     var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
@@ -81,11 +94,12 @@ builder.Services.AddCors(options =>
               .AllowCredentials());
 });
 
+// ADDED: Register SignalR
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
-
-
-// ↓ Security Headers Middleware
+// Security Headers Middleware
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
@@ -100,9 +114,13 @@ app.Use(async (context, next) =>
     await next();
 });
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-
-// ↓ NEW: Automatically create and migrate the database on startup
+// Database migration on startup
 using (var scope = app.Services.CreateScope())
 {
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
@@ -112,7 +130,6 @@ using (var scope = app.Services.CreateScope())
         dbContext.Database.Migrate();
         logger.LogInformation("Database migrations applied successfully");
 
-        // --- Rolių seed'as ---
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         foreach (var role in new[] { "Admin", "User" })
         {
@@ -120,7 +137,6 @@ using (var scope = app.Services.CreateScope())
                 await roleManager.CreateAsync(new IdentityRole(role));
         }
         logger.LogInformation("Roles seeded successfully");
-        // --- ---
     }
     catch (Exception ex)
     {
@@ -128,26 +144,19 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// ↓ Only enable Swagger in Development
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// ↓ Apply the CORS policy (must be before UseAuthorization)
 app.UseCors("AllowFrontEnd");
-
-app.UseStaticFiles(); // Added for image serving
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 
 if (!app.Environment.IsDevelopment())
-{
     app.UseExceptionHandler("/error");
-}
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// ADDED: Map the ChatHub endpoint
+app.MapHub<ChatHub>("/hubs/chat");
+
 app.Run();
 public partial class Program { }
