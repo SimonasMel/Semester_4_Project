@@ -2,6 +2,7 @@
 @inject AuthService Auth
 @inject AuthTokenStore TokenStore
 @inject NavigationManager Nav
+@inject ThemeService Theme
 
 <div class="max-w-6xl mx-auto p-6">
 
@@ -54,6 +55,24 @@
         </div>
 
         <div class="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2 mb-6">
+                <span class="bi bi-palette text-primary"></span>
+                <h3 class="text-xl font-semibold m-0 text-text-dark dark:text-text-light">Theme</h3>
+            </div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-text-dark dark:text-text-light mb-1">Appearance</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 m-0">@(Theme.IsDark ? "Dark mode" : "Light mode")</p>
+                </div>
+                <button class="inline-flex items-center px-6 py-3 rounded-full font-bold transition-all duration-200 active:scale-[0.98] border border-primary text-primary bg-primary/10 hover:bg-primary/20 dark:border-slate-700 dark:bg-slate-800"
+                        @onclick="ToggleThemeAsync">
+                    <span class="bi @(Theme.IsDark ? "bi-brightness-high" : "bi-moon") mr-2"></span>
+                    @(Theme.IsDark ? "Light Mode" : "Dark Mode")
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-2 mb-4">
                 <span class="bi bi-info-circle text-primary"></span>
                 <h3 class="text-xl font-semibold m-0 text-text-dark dark:text-text-light">Quick Info</h3>
@@ -78,9 +97,24 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Theme.OnChange += StateHasChanged;
+    }
+
     private async Task Logout()
     {
         await Auth.LogoutAsync();
         Nav.NavigateTo("/login");
+    }
+
+    private async Task ToggleThemeAsync()
+    {
+        await Theme.ToggleAsync();
+    }
+
+    public void Dispose()
+    {
+        Theme.OnChange -= StateHasChanged;
     }
 }
