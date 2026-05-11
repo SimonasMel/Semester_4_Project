@@ -24,7 +24,7 @@
 
             @foreach (var car in Garage.MatchedCars)
             {
-                <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30">
+                <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30 hover:shadow-md hover:-translate-y-1">
 
                     <img src="@ResolveImageUrl(car.PrimaryImagePath)" alt="Car photo" class="w-20 h-20 object-cover rounded-lg mr-5 shadow-sm" />
 

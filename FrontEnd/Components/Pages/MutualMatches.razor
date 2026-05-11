@@ -5,6 +5,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject CarService Garage
 @inject NavigationManager Nav
+@inject ILogger<MutualMatches> Logger
 @implements IDisposable
 
 <!-- Chat panel rendered at page level so it overlays everything -->
@@ -17,11 +18,18 @@
 <div class="max-w-4xl mx-auto p-6">
     <h2 class="text-3xl font-bold mb-8 text-primary">💕 Mutual Matches</h2>
 
+    <ErrorMessage Message="@errorMessage" OnDismiss="@(() => errorMessage = null)" />
+
     @if (isLoading)
     {
-        <div class="flex flex-col items-center justify-center p-12 text-center">
-            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-gray-400">Loading matches...</p>
+        <LoadingSpinner IsVisible="true" Message="Loading matches..." />
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="flex flex-col items-center justify-center p-12 text-center gap-4">
+            <span class="bi bi-exclamation-triangle text-4xl text-red-500"></span>
+            <h3 class="text-xl font-bold">Failed to load matches</h3>
+            <button @onclick="() => { errorMessage = null; _ = RetryLoad(); }" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Retry</button>
         </div>
     }
     else if (Garage.GetMutualMatches().Count == 0)
@@ -43,7 +51,7 @@
             {
                 matchCars.TryGetValue(match.Id, out var car);
 
-                <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30">
+                <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30 hover:shadow-md hover:-translate-y-1">
                     <img src="@(car?.PrimaryImagePath ?? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E")"
                          alt="Car photo"
                          class="w-20 h-20 object-cover rounded-lg mr-5 shadow-sm" />
@@ -88,6 +96,7 @@
     private readonly Dictionary<string, Car> matchCars = new();
     private bool isLoading;
     private string? currentUserId;
+    private string? errorMessage;
 
     // Chat state
     private bool _isChatOpen = false;
@@ -103,10 +112,24 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        await Garage.GetMutualMatchesAsync();
-        await LoadMatchCarsAsync();
+        await LoadDataAsync();
 
         isLoading = false;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            await Garage.GetMutualMatchesAsync();
+            await LoadMatchCarsAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading mutual matches");
+            errorMessage = "An error occurred while loading matches. Please try again later.";
+        }
     }
 
     private async Task LoadMatchCarsAsync()
@@ -172,6 +195,15 @@
             matchCars.Remove(matchId);
             StateHasChanged();
         }
+    }
+
+    private async Task RetryLoad()
+    {
+        isLoading = true;
+        StateHasChanged();
+        await LoadDataAsync();
+        isLoading = false;
+        StateHasChanged();
     }
 
     private static string GetDetailsUrl(Car car) =>
