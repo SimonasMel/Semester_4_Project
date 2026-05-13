@@ -8,7 +8,6 @@
 @inject ILogger<MutualMatches> Logger
 @implements IDisposable
 
-<!-- Chat panel rendered at page level so it overlays everything -->
 <ChatPanel MatchId="@_activeChatMatchId"
            MatchedCarName="@_activeChatCarName"
            MatchedCarImage="@_activeChatCarImage"
@@ -46,12 +45,14 @@
     }
     else
     {
-        <div class="flex flex-col gap-5 w-full max-w-[700px]">
+        @* Medium+ screens: horizontal card layout *@
+        <div class="hidden md:flex flex-col gap-5 w-full max-w-[700px]">
             @foreach (var match in Garage.GetMutualMatches())
             {
                 matchCars.TryGetValue(match.Id, out var car);
 
                 <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30 hover:shadow-md hover:-translate-y-1">
+
                     <img src="@(car?.PrimaryImagePath ?? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E")"
                          alt="Car photo"
                          class="w-20 h-20 object-cover rounded-lg mr-5 shadow-sm" />
@@ -74,18 +75,62 @@
                                 Details
                             </a>
                         }
-
-                        <!-- CHANGED: Message button now opens the chat panel -->
                         <button class="relative bg-primary-blue text-white border-none py-2 px-5 rounded-full cursor-pointer transition-all duration-200 hover:bg-blue-600 shadow-sm hover:shadow-md text-sm font-bold active:scale-[0.98]"
                                 @onclick="() => OpenChat(match, car)">
                             Message
                         </button>
-
                         <button class="bg-red-500 text-white border-none py-2 px-5 rounded-full cursor-pointer hover:bg-red-600 transition-all duration-200 active:scale-[0.98] text-sm font-bold shadow-sm hover:shadow-md"
                                 @onclick="() => UnmatchAsync(match.Id)">
                             Unmatch
                         </button>
                     </div>
+
+                </div>
+            }
+        </div>
+
+        @* Small screens: stacked card layout *@
+        <div class="flex md:hidden flex-col gap-4 w-full">
+            @foreach (var match in Garage.GetMutualMatches())
+            {
+                matchCars.TryGetValue(match.Id, out var car);
+
+                <div class="bg-white dark:bg-surface-dark rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30">
+
+                    <img src="@(car?.PrimaryImagePath ?? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E")"
+                         alt="Car photo"
+                         class="w-full h-40 object-cover" />
+
+                    <div class="p-3">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div class="flex-grow min-w-0">
+                                <h4 class="text-base font-bold m-0 text-text-dark dark:text-text-light truncate">
+                                    @(car is null ? "Matched Car" : $"{car.Brand} {car.Model}")
+                                </h4>
+                                <p class="text-xs text-text-muted dark:text-gray-400 m-0 font-medium">@(car?.ProductionYear.ToString() ?? "Unknown year")</p>
+                                <span class="text-primary font-bold text-base">@(car is null ? "" : $"€{car.Price}")</span>
+                            </div>
+                            <span class="text-xs text-text-muted dark:text-gray-400 shrink-0">💕 @match.MatchedDate.ToString("MMM dd, yyyy")</span>
+                        </div>
+
+                        <div class="flex gap-2 mt-2">
+                            @if (car is not null)
+                            {
+                                <a href="@GetDetailsUrl(car)" class="flex-1 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 text-text-dark dark:text-text-light hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 no-underline text-xs font-bold text-center">
+                                    Details
+                                </a>
+                            }
+                            <button class="flex-1 bg-primary-blue text-white border-none py-1.5 px-3 rounded-full cursor-pointer transition-all duration-200 hover:bg-blue-600 shadow-sm text-xs font-bold active:scale-[0.98]"
+                                    @onclick="() => OpenChat(match, car)">
+                                Message
+                            </button>
+                            <button class="flex-1 bg-red-500 text-white border-none py-1.5 px-3 rounded-full cursor-pointer hover:bg-red-600 transition-all duration-200 active:scale-[0.98] text-xs font-bold shadow-sm"
+                                    @onclick="() => UnmatchAsync(match.Id)">
+                                Unmatch
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             }
         </div>
@@ -98,7 +143,6 @@
     private string? currentUserId;
     private string? errorMessage;
 
-    // Chat state
     private bool _isChatOpen = false;
     private string? _activeChatMatchId;
     private string? _activeChatCarName;
@@ -166,7 +210,6 @@
         }
     }
 
-    // ADDED: Open chat for a specific match
     private void OpenChat(MutualMatch match, Car? car)
     {
         _activeChatMatchId = match.Id;
@@ -176,7 +219,6 @@
         StateHasChanged();
     }
 
-    // ADDED: Close the chat panel
     private void CloseChat()
     {
         _isChatOpen = false;
@@ -186,7 +228,6 @@
 
     private async Task UnmatchAsync(string matchId)
     {
-        // Close chat if it's open for this match
         if (_activeChatMatchId == matchId)
             CloseChat();
 
