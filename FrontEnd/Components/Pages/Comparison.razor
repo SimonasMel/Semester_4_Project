@@ -155,7 +155,7 @@
 
                 @* Header row *@
                 <div class="grid grid-cols-[1fr_1fr_1fr] gap-2 px-3 py-2">
-                    <span class="text-xs font-bold text-text-muted dark:text-gray-400 uppercase tracking-wider">Spec</span>
+                    <span class="text-xs font-bold text-text-muted dark:text-gray-400 uppercase tracking-wider text-center">Car name</span>
                     <span class="text-xs font-bold text-text-dark dark:text-text-light text-center truncate">@car1.Brand @car1.Model</span>
                     <span class="text-xs font-bold text-text-dark dark:text-text-light text-center truncate">@car2.Brand @car2.Model</span>
                 </div>
@@ -165,7 +165,7 @@
                     void SpecRow(string label, string v1, string v2, string c1Class = "", string c2Class = "")
                     {
                         <div class="grid grid-cols-[1fr_1fr_1fr] gap-2 items-center bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-3 shadow-light-soft dark:shadow-soft">
-                            <span class="text-xs text-text-muted dark:text-gray-400 font-medium">@label</span>
+                            <span class="text-xs text-text-muted dark:text-gray-400 font-medium text-center">@label</span>
                             <span class="text-sm font-semibold text-center rounded-lg py-1 @c1Class text-text-dark dark:text-text-light">@v1</span>
                             <span class="text-sm font-semibold text-center rounded-lg py-1 @c2Class text-text-dark dark:text-text-light">@v2</span>
                         </div>
