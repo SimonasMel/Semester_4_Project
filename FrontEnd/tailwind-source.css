@@ -21,4 +21,25 @@
   html.dark {
     background-color: #020617; /* bg-bg-dark */
   }
+
+  /* Custom styles for dark select dropdowns */
+  select.dark-dropdown {
+    background-color: black;
+    color: white;
+  }
+
+  select.dark-dropdown option {
+    background-color: black;
+    color: white;
+  }
+
+  select.dark-dropdown option:hover {
+    background-color: #16a34a; /* green-600 */
+    color: white;
+  }
+
+  select.dark-dropdown option:checked {
+    background: linear-gradient(#16a34a, #16a34a);
+    background-color: #16a34a;
+  }
 }

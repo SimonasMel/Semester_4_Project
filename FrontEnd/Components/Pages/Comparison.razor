@@ -1,5 +1,6 @@
 @page "/comparison"
 @inject CarService Garage
+@inject IJSRuntime JS
 
 <div class="max-w-6xl mx-auto p-6">
 
@@ -13,140 +14,271 @@
     }
     else
     {
-        <div class="flex justify-center gap-8 mb-8">
-            <div>
-                <label for="car1-select" class="block text-sm font-medium text-text-dark dark:text-text-light mb-2">Select Car 1</label>
-                <select id="car1-select" @bind="SelectedCar1Index" class="border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 bg-white dark:bg-surface-dark text-text-dark dark:text-text-light">
-                    @for (int i = 0; i < Garage.MatchedCars.Count; i++)
-                    {
-                        <option value="@i">@Garage.MatchedCars[i].Brand @Garage.MatchedCars[i].Model</option>
-                    }
-                </select>
-            </div>
-            <div>
-                <label for="car2-select" class="block text-sm font-medium text-text-dark dark:text-text-light mb-2">Select Car 2</label>
-                <select id="car2-select" @bind="SelectedCar2Index" class="border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 bg-white dark:bg-surface-dark text-text-dark dark:text-text-light">
-                    @for (int i = 0; i < Garage.MatchedCars.Count; i++)
-                    {
-                        <option value="@i">@Garage.MatchedCars[i].Brand @Garage.MatchedCars[i].Model</option>
-                    }
-                </select>
-            </div>
-        </div>
-
         var car1 = Garage.MatchedCars[SelectedCar1Index];
         var car2 = Garage.MatchedCars[SelectedCar2Index];
 
-        <div class="flex flex-wrap justify-center gap-16 mt-8">
-            <div class="text-center flex flex-col gap-4">
-                <img src="@car1.PrimaryImagePath" class="w-[300px] h-[200px] object-cover rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800" />
-                <h3 class="text-xl font-bold text-text-dark dark:text-text-light">@car1.Brand @car1.Model</h3>
+        @* Medium+ screens *@
+        <div style="display: @(IsSmallScreen ? "none" : "block")">
+
+            <div class="flex justify-center gap-8 mb-8">
+                <div>
+                    <label for="car1-select-md" class="block text-sm font-medium text-text-dark dark:text-text-light mb-2">Select Car 1</label>
+                    <select id="car1-select-md" @bind="SelectedCar1Index" class="border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 bg-white dark:bg-surface-dark text-text-dark dark:text-text-light">
+                        @for (int i = 0; i < Garage.MatchedCars.Count; i++)
+                        {
+                            <option value="@i">@Garage.MatchedCars[i].Brand @Garage.MatchedCars[i].Model</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="car2-select-md" class="block text-sm font-medium text-text-dark dark:text-text-light mb-2">Select Car 2</label>
+                    <select id="car2-select-md" @bind="SelectedCar2Index" class="border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 bg-white dark:bg-surface-dark text-text-dark dark:text-text-light">
+                        @for (int i = 0; i < Garage.MatchedCars.Count; i++)
+                        {
+                            <option value="@i">@Garage.MatchedCars[i].Brand @Garage.MatchedCars[i].Model</option>
+                        }
+                    </select>
+                </div>
             </div>
 
-            <div class="text-center flex flex-col gap-4">
-                <img src="@car2.PrimaryImagePath" class="w-[300px] h-[200px] object-cover rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800" />
-                <h3 class="text-xl font-bold text-text-dark dark:text-text-light">@car2.Brand @car2.Model</h3>
+            <div class="flex flex-wrap justify-center gap-16 mt-8">
+                <div class="text-center flex flex-col gap-4">
+                    <img src="@car1.PrimaryImagePath" class="w-[300px] h-[200px] object-cover rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800" />
+                    <h3 class="text-xl font-bold text-text-dark dark:text-text-light">@car1.Brand @car1.Model</h3>
+                </div>
+                <div class="text-center flex flex-col gap-4">
+                    <img src="@car2.PrimaryImagePath" class="w-[300px] h-[200px] object-cover rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800" />
+                    <h3 class="text-xl font-bold text-text-dark dark:text-text-light">@car2.Brand @car2.Model</h3>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto mt-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft">
+                <table class="w-full border-collapse bg-white dark:bg-surface-dark">
+                    <thead>
+                        <tr>
+                            <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">Specification</th>
+                            <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">@car1.Brand @car1.Model</th>
+                            <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">@car2.Brand @car2.Model</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Year</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.ProductionYear), Convert.ToDouble(car2.ProductionYear), higherIsBetter: true))">@car1.ProductionYear</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.ProductionYear), Convert.ToDouble(car2.ProductionYear), higherIsBetter: true))">@car2.ProductionYear</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Fuel</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.FuelType</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.FuelType</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Transmission</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.Transmission</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.Transmission</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Body</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.BodyType</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.BodyType</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Power (kW)</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.EnginePowerKW), Convert.ToDouble(car2.EnginePowerKW), higherIsBetter: true))">@car1.EnginePowerKW</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.EnginePowerKW), Convert.ToDouble(car2.EnginePowerKW), higherIsBetter: true))">@car2.EnginePowerKW</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Fuel Consumption</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.FuelConsumptionLitersPer100Km), Convert.ToDouble(car2.FuelConsumptionLitersPer100Km), higherIsBetter: false))">@car1.FuelConsumptionLitersPer100Km</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.FuelConsumptionLitersPer100Km), Convert.ToDouble(car2.FuelConsumptionLitersPer100Km), higherIsBetter: false))">@car2.FuelConsumptionLitersPer100Km</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Price</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.Price), Convert.ToDouble(car2.Price), higherIsBetter: false))">€@car1.Price</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.Price), Convert.ToDouble(car2.Price), higherIsBetter: false))">€@car2.Price</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Mileage</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.MileageKm), Convert.ToDouble(car2.MileageKm), higherIsBetter: false))">@car1.MileageKm km</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.MileageKm), Convert.ToDouble(car2.MileageKm), higherIsBetter: false))">@car2.MileageKm km</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Location</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.Location</td>
+                            <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.Location</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
         </div>
 
-        <div class="overflow-x-auto mt-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-light-soft dark:shadow-soft">
-            <table class="w-full border-collapse bg-white dark:bg-surface-dark">
+        @* Small screens *@
+        <div style="display: @(IsSmallScreen ? "flex" : "none")" class="flex-col gap-6">
 
-                <thead>
-                    <tr>
-                        <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">Specification</th>
-                        <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">@car1.Brand @car1.Model</th>
-                        <th class="border border-slate-200 dark:border-slate-800 p-4 bg-gray-50 dark:bg-slate-800/60 text-text-dark dark:text-text-light font-bold text-center">@car2.Brand @car2.Model</th>
-                    </tr>
-                </thead>
+            @* Stacked dropdowns *@
+            <div class="flex flex-col gap-4">
+                <div>
+                    <label for="car1-select-sm" class="block text-sm font-medium text-text-dark dark:text-text-light mb-2">Select Car 1</label>
+                    <select id="car1-select-sm" @bind="SelectedCar1Index" class="w-full border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 bg-white dark:bg-surface-dark text-text-dark dark:text-text-light">
+                        @for (int i = 0; i < Garage.MatchedCars.Count; i++)
+                        {
+                            <option value="@i">@Garage.MatchedCars[i].Brand @Garage.MatchedCars[i].Model</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="car2-select-sm" class="block text-sm font-medium text-text-dark dark:text-text-light mb-2">Select Car 2</label>
+                    <select id="car2-select-sm" @bind="SelectedCar2Index" class="w-full border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 bg-white dark:bg-surface-dark text-text-dark dark:text-text-light">
+                        @for (int i = 0; i < Garage.MatchedCars.Count; i++)
+                        {
+                            <option value="@i">@Garage.MatchedCars[i].Brand @Garage.MatchedCars[i].Model</option>
+                        }
+                    </select>
+                </div>
+            </div>
 
-                <tbody>
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Year</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.ProductionYear), Convert.ToDouble(car2.ProductionYear), higherIsBetter: true))">@car1.ProductionYear</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.ProductionYear), Convert.ToDouble(car2.ProductionYear), higherIsBetter: true))">@car2.ProductionYear</td>
-                    </tr>
+            @* Side-by-side thumbnails *@
+            <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-2 text-center">
+                    <img src="@car1.PrimaryImagePath" class="w-full h-28 object-cover rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm" />
+                    <span class="text-sm font-bold text-text-dark dark:text-text-light truncate">@car1.Brand @car1.Model</span>
+                </div>
+                <div class="flex flex-col gap-2 text-center">
+                    <img src="@car2.PrimaryImagePath" class="w-full h-28 object-cover rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm" />
+                    <span class="text-sm font-bold text-text-dark dark:text-text-light truncate">@car2.Brand @car2.Model</span>
+                </div>
+            </div>
 
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Fuel</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.FuelType</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.FuelType</td>
-                    </tr>
+            @* Spec cards replacing the table *@
+            <div class="flex flex-col gap-2">
 
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Transmission</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.Transmission</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.Transmission</td>
-                    </tr>
+                @* Header row *@
+                <div class="grid grid-cols-[1fr_1fr_1fr] gap-2 px-3 py-2">
+                    <span class="text-xs font-bold text-text-muted dark:text-gray-400 uppercase tracking-wider text-center">Car name</span>
+                    <span class="text-xs font-bold text-text-dark dark:text-text-light text-center truncate">@car1.Brand @car1.Model</span>
+                    <span class="text-xs font-bold text-text-dark dark:text-text-light text-center truncate">@car2.Brand @car2.Model</span>
+                </div>
 
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Body</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.BodyType</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.BodyType</td>
-                    </tr>
+                @* Each spec row as a card *@
+                @{
+                    void SpecRow(string label, string v1, string v2, string c1Class = "", string c2Class = "")
+                    {
+                        <div class="grid grid-cols-[1fr_1fr_1fr] gap-2 items-center bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-3 shadow-light-soft dark:shadow-soft">
+                            <span class="text-xs text-text-muted dark:text-gray-400 font-medium text-center">@label</span>
+                            <span class="text-sm font-semibold text-center rounded-lg py-1 @c1Class text-text-dark dark:text-text-light">@v1</span>
+                            <span class="text-sm font-semibold text-center rounded-lg py-1 @c2Class text-text-dark dark:text-text-light">@v2</span>
+                        </div>
+                    }
+                }
 
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Power (kW)</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.EnginePowerKW), Convert.ToDouble(car2.EnginePowerKW), higherIsBetter: true))">@car1.EnginePowerKW</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.EnginePowerKW), Convert.ToDouble(car2.EnginePowerKW), higherIsBetter: true))">@car2.EnginePowerKW</td>
-                    </tr>
+                @{
+                    SpecRow("Year", car1.ProductionYear.ToString(), car2.ProductionYear.ToString(), GetLeftCellClassNumeric(Convert.ToDouble(car1.ProductionYear), Convert.ToDouble(car2.ProductionYear), true), GetRightCellClassNumeric(Convert.ToDouble(car1.ProductionYear), Convert.ToDouble(car2.ProductionYear), true));
+                }
+                @{
+                    SpecRow("Fuel", car1.FuelType.ToString() ?? "-", car2.FuelType.ToString() ?? "-");
+                }
+                @{
+                    SpecRow("Transmission", car1.Transmission.ToString() ?? "-", car2.Transmission.ToString() ?? "-");
+                }
+                @{
+                    SpecRow("Body", car1.BodyType.ToString() ?? "-", car2.BodyType.ToString() ?? "-");
+                }
+                @{
+                    SpecRow("Power (kW)", car1.EnginePowerKW.ToString(), car2.EnginePowerKW.ToString(), GetLeftCellClassNumeric(Convert.ToDouble(car1.EnginePowerKW), Convert.ToDouble(car2.EnginePowerKW), true), GetRightCellClassNumeric(Convert.ToDouble(car1.EnginePowerKW), Convert.ToDouble(car2.EnginePowerKW), true));
+                }
+                @{
+                    SpecRow("Fuel cons.", car1.FuelConsumptionLitersPer100Km.ToString(), car2.FuelConsumptionLitersPer100Km.ToString(), GetLeftCellClassNumeric(Convert.ToDouble(car1.FuelConsumptionLitersPer100Km), Convert.ToDouble(car2.FuelConsumptionLitersPer100Km), false), GetRightCellClassNumeric(Convert.ToDouble(car1.FuelConsumptionLitersPer100Km), Convert.ToDouble(car2.FuelConsumptionLitersPer100Km), false));
+                }
+                @{
+                    SpecRow("Price", $"€{car1.Price}", $"€{car2.Price}", GetLeftCellClassNumeric(Convert.ToDouble(car1.Price), Convert.ToDouble(car2.Price), false), GetRightCellClassNumeric(Convert.ToDouble(car1.Price), Convert.ToDouble(car2.Price), false));
+                }
+                @{
+                    SpecRow("Mileage", $"{car1.MileageKm} km", $"{car2.MileageKm} km", GetLeftCellClassNumeric(Convert.ToDouble(car1.MileageKm), Convert.ToDouble(car2.MileageKm), false), GetRightCellClassNumeric(Convert.ToDouble(car1.MileageKm), Convert.ToDouble(car2.MileageKm), false));
+                }
+                @{
+                    SpecRow("Location", car1.Location ?? "-", car2.Location ?? "-");
+                }
 
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Fuel Consumption</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.FuelConsumptionLitersPer100Km), Convert.ToDouble(car2.FuelConsumptionLitersPer100Km), higherIsBetter: false))">@car1.FuelConsumptionLitersPer100Km</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.FuelConsumptionLitersPer100Km), Convert.ToDouble(car2.FuelConsumptionLitersPer100Km), higherIsBetter: false))">@car2.FuelConsumptionLitersPer100Km</td>
-                    </tr>
-
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Price</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.Price), Convert.ToDouble(car2.Price), higherIsBetter: false))">€@car1.Price</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.Price), Convert.ToDouble(car2.Price), higherIsBetter: false))">€@car2.Price</td>
-                    </tr>
-
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Mileage</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetLeftCellClassNumeric(Convert.ToDouble(car1.MileageKm), Convert.ToDouble(car2.MileageKm), higherIsBetter: false))">@car1.MileageKm km</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold @(GetRightCellClassNumeric(Convert.ToDouble(car1.MileageKm), Convert.ToDouble(car2.MileageKm), higherIsBetter: false))">@car2.MileageKm km</td>
-                    </tr>
-
-                    <tr>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-muted dark:text-gray-400 font-medium">Location</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car1.Location</td>
-                        <td class="border border-slate-100 dark:border-slate-800 p-4 text-center text-text-dark dark:text-text-light font-semibold">@car2.Location</td>
-                    </tr>
-                </tbody>
-
-            </table>
+            </div>
         </div>
     }
 
 </div>
 
 @code {
-    private int SelectedCar1Index { get; set; } = 0;
-    private int SelectedCar2Index { get; set; } = 1;
+    private int _selectedCar1Index = 0;
+    private int _selectedCar2Index = 1;
+    private bool IsSmallScreen = false;
+
+    private int SelectedCar1Index
+    {
+        get => _selectedCar1Index;
+        set
+        {
+            if (_selectedCar1Index != value)
+            {
+                _selectedCar1Index = value;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private int SelectedCar2Index
+    {
+        get => _selectedCar2Index;
+        set
+        {
+            if (_selectedCar2Index != value)
+            {
+                _selectedCar2Index = value;
+                StateHasChanged();
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("setupResizeListener", DotNetObjectReference.Create(this));
+            await CheckScreenSize();
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnWindowResize()
+    {
+        await CheckScreenSize();
+    }
+
+    private async Task CheckScreenSize()
+    {
+        bool isSmall = await JS.InvokeAsync<bool>("getIsSmallScreen");
+        if (isSmall != IsSmallScreen)
+        {
+            IsSmallScreen = isSmall;
+            StateHasChanged();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Garage.OnChange += StateHasChanged;
+    }
 
     private string GetLeftCellClassNumeric(double left, double right, bool higherIsBetter)
     {
-        if (double.IsNaN(left) || double.IsNaN(right))
-            return string.Empty;
-
-        if (Math.Abs(left - right) < 0.0001)
-            return string.Empty;
-
+        if (double.IsNaN(left) || double.IsNaN(right)) return string.Empty;
+        if (Math.Abs(left - right) < 0.0001) return string.Empty;
         bool leftIsBetter = higherIsBetter ? left > right : left < right;
         return leftIsBetter ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : string.Empty;
     }
 
     private string GetRightCellClassNumeric(double left, double right, bool higherIsBetter)
     {
-        if (double.IsNaN(left) || double.IsNaN(right))
-            return string.Empty;
-
-        if (Math.Abs(left - right) < 0.0001)
-            return string.Empty;
-
+        if (double.IsNaN(left) || double.IsNaN(right)) return string.Empty;
+        if (Math.Abs(left - right) < 0.0001) return string.Empty;
         bool rightIsBetter = higherIsBetter ? right > left : right < left;
         return rightIsBetter ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : string.Empty;
     }

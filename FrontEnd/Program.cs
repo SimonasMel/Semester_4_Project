@@ -34,6 +34,8 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<CarService>();
 builder.Services.AddScoped<ThemeService>();
 
+builder.Services.AddScoped<ChatService>();
+
 var app = builder.Build();
 
 // ↓ Security Headers Middleware

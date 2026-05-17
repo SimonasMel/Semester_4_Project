@@ -5,15 +5,30 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject CarService Garage
 @inject NavigationManager Nav
+@inject ILogger<MutualMatches> Logger
+@implements IDisposable
+
+<ChatPanel MatchId="@_activeChatMatchId"
+           MatchedCarName="@_activeChatCarName"
+           MatchedCarImage="@_activeChatCarImage"
+           IsOpen="@_isChatOpen"
+           OnClose="CloseChat" />
 
 <div class="max-w-4xl mx-auto p-6">
     <h2 class="text-3xl font-bold mb-8 text-primary">💕 Mutual Matches</h2>
 
+    <ErrorMessage Message="@errorMessage" OnDismiss="@(() => errorMessage = null)" />
+
     @if (isLoading)
     {
-        <div class="flex flex-col items-center justify-center p-12 text-center">
-            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-gray-400">Loading matches...</p>
+        <LoadingSpinner IsVisible="true" Message="Loading matches..." />
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="flex flex-col items-center justify-center p-12 text-center gap-4">
+            <span class="bi bi-exclamation-triangle text-4xl text-red-500"></span>
+            <h3 class="text-xl font-bold">Failed to load matches</h3>
+            <button @onclick="() => { errorMessage = null; _ = RetryLoad(); }" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Retry</button>
         </div>
     }
     else if (Garage.GetMutualMatches().Count == 0)
@@ -30,12 +45,14 @@
     }
     else
     {
-        <div class="flex flex-col gap-5 w-full max-w-[700px]">
+        @* Medium+ screens: horizontal card layout *@
+        <div class="hidden md:flex flex-col gap-5 w-full max-w-[700px]">
             @foreach (var match in Garage.GetMutualMatches())
             {
                 matchCars.TryGetValue(match.Id, out var car);
 
-                <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30">
+                <div class="flex items-center bg-white dark:bg-surface-dark p-3 rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30 hover:shadow-md hover:-translate-y-1">
+
                     <img src="@(car?.PrimaryImagePath ?? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E")"
                          alt="Car photo"
                          class="w-20 h-20 object-cover rounded-lg mr-5 shadow-sm" />
@@ -58,12 +75,62 @@
                                 Details
                             </a>
                         }
-
+                        <button class="relative bg-primary-blue text-white border-none py-2 px-5 rounded-full cursor-pointer transition-all duration-200 hover:bg-blue-600 shadow-sm hover:shadow-md text-sm font-bold active:scale-[0.98]"
+                                @onclick="() => OpenChat(match, car)">
+                            Message
+                        </button>
                         <button class="bg-red-500 text-white border-none py-2 px-5 rounded-full cursor-pointer hover:bg-red-600 transition-all duration-200 active:scale-[0.98] text-sm font-bold shadow-sm hover:shadow-md"
                                 @onclick="() => UnmatchAsync(match.Id)">
-                            💔 Unmatch
+                            Unmatch
                         </button>
                     </div>
+
+                </div>
+            }
+        </div>
+
+        @* Small screens: stacked card layout *@
+        <div class="flex md:hidden flex-col gap-4 w-full">
+            @foreach (var match in Garage.GetMutualMatches())
+            {
+                matchCars.TryGetValue(match.Id, out var car);
+
+                <div class="bg-white dark:bg-surface-dark rounded-xl shadow-light-soft dark:shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/30">
+
+                    <img src="@(car?.PrimaryImagePath ?? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E")"
+                         alt="Car photo"
+                         class="w-full h-40 object-cover" />
+
+                    <div class="p-3">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div class="flex-grow min-w-0">
+                                <h4 class="text-base font-bold m-0 text-text-dark dark:text-text-light truncate">
+                                    @(car is null ? "Matched Car" : $"{car.Brand} {car.Model}")
+                                </h4>
+                                <p class="text-xs text-text-muted dark:text-gray-400 m-0 font-medium">@(car?.ProductionYear.ToString() ?? "Unknown year")</p>
+                                <span class="text-primary font-bold text-base">@(car is null ? "" : $"€{car.Price}")</span>
+                            </div>
+                            <span class="text-xs text-text-muted dark:text-gray-400 shrink-0">💕 @match.MatchedDate.ToString("MMM dd, yyyy")</span>
+                        </div>
+
+                        <div class="flex gap-2 mt-2">
+                            @if (car is not null)
+                            {
+                                <a href="@GetDetailsUrl(car)" class="flex-1 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 text-text-dark dark:text-text-light hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 no-underline text-xs font-bold text-center">
+                                    Details
+                                </a>
+                            }
+                            <button class="flex-1 bg-primary-blue text-white border-none py-1.5 px-3 rounded-full cursor-pointer transition-all duration-200 hover:bg-blue-600 shadow-sm text-xs font-bold active:scale-[0.98]"
+                                    @onclick="() => OpenChat(match, car)">
+                                Message
+                            </button>
+                            <button class="flex-1 bg-red-500 text-white border-none py-1.5 px-3 rounded-full cursor-pointer hover:bg-red-600 transition-all duration-200 active:scale-[0.98] text-xs font-bold shadow-sm"
+                                    @onclick="() => UnmatchAsync(match.Id)">
+                                Unmatch
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             }
         </div>
@@ -74,6 +141,12 @@
     private readonly Dictionary<string, Car> matchCars = new();
     private bool isLoading;
     private string? currentUserId;
+    private string? errorMessage;
+
+    private bool _isChatOpen = false;
+    private string? _activeChatMatchId;
+    private string? _activeChatCarName;
+    private string? _activeChatCarImage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,10 +156,24 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        await Garage.GetMutualMatchesAsync();
-        await LoadMatchCarsAsync();
+        await LoadDataAsync();
 
         isLoading = false;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            await Garage.GetMutualMatchesAsync();
+            await LoadMatchCarsAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading mutual matches");
+            errorMessage = "An error occurred while loading matches. Please try again later.";
+        }
     }
 
     private async Task LoadMatchCarsAsync()
@@ -99,14 +186,10 @@
             Car? matchedUserCar = null;
 
             if (!string.IsNullOrWhiteSpace(match.CurrentUserCarId))
-            {
                 currentUserCar = await Garage.GetCarByIdAsync(match.CurrentUserCarId);
-            }
 
             if (!string.IsNullOrWhiteSpace(match.MatchedUserCarId))
-            {
                 matchedUserCar = await Garage.GetCarByIdAsync(match.MatchedUserCarId);
-            }
 
             Car? displayCar = null;
 
@@ -117,27 +200,51 @@
                     : null;
 
                 if (displayCar is null && matchedUserCar is not null && matchedUserCar.UserId != currentUserId)
-                {
                     displayCar = matchedUserCar;
-                }
             }
 
             displayCar ??= matchedUserCar ?? currentUserCar;
 
             if (displayCar is not null)
-            {
                 matchCars[match.Id] = displayCar;
-            }
         }
+    }
+
+    private void OpenChat(MutualMatch match, Car? car)
+    {
+        _activeChatMatchId = match.Id;
+        _activeChatCarName = car is not null ? $"{car.Brand} {car.Model}" : "Matched Car";
+        _activeChatCarImage = car?.PrimaryImagePath;
+        _isChatOpen = true;
+        StateHasChanged();
+    }
+
+    private void CloseChat()
+    {
+        _isChatOpen = false;
+        _activeChatMatchId = null;
+        StateHasChanged();
     }
 
     private async Task UnmatchAsync(string matchId)
     {
+        if (_activeChatMatchId == matchId)
+            CloseChat();
+
         if (await Garage.RemoveMutualMatchAsync(matchId))
         {
             matchCars.Remove(matchId);
             StateHasChanged();
         }
+    }
+
+    private async Task RetryLoad()
+    {
+        isLoading = true;
+        StateHasChanged();
+        await LoadDataAsync();
+        isLoading = false;
+        StateHasChanged();
     }
 
     private static string GetDetailsUrl(Car car) =>

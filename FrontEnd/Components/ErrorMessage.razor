@@ -1,0 +1,15 @@
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="mb-6 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl text-red-800 dark:text-red-200 flex items-center justify-between animate-in fade-in duration-300">
+        <span>✗ @Message</span>
+        <button @onclick="OnDismiss" class="text-red-600 hover:text-red-800 font-bold">×</button>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? Message { get; set; }
+
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+}
